@@ -10,11 +10,13 @@ import PageNotFound from "./components/PageNotFound";
 import Products from "./components/Products";
 import Cart from "./components/Cart";
 import About from "./components/About";
+import Favorites from "./components/Favorites";
 
 function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>();
   
   useEffect(() => {
+    // כאן ניתן להוסיף לוגיקה לבדיקת הרשאות משתמש
   }, []);
 
   return (
@@ -27,6 +29,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>

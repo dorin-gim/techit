@@ -1,14 +1,19 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { Product } from "../interfaces/Product";
 import { getAllProducts } from "../services/productsService";
-import Layout from "./Layout";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
+import SearchBar from "./SearchBar";
 import { getPayloadFromToken } from "../services/usersService";
 import AddProductModal from "./AddProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import DeleteProductModal from "./DeleteProductModal";
+import FavoriteButton from "./FavoriteButton";
 import { addToCart } from "../services/cartsService";
 
 interface ProductsProps {}
+
+type ViewMode = 'cards' | 'table';
 
 const Products: FunctionComponent<ProductsProps> = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,10 +24,11 @@ const Products: FunctionComponent<ProductsProps> = () => {
   const [openUpdateModal, setOpenUpdateModal] = useState<boolean>(false);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [productId, setProductId] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-    
+  // קבלת קטגוריות ייחודיות
   const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))];
 
   useEffect(() => {
@@ -42,7 +48,7 @@ const Products: FunctionComponent<ProductsProps> = () => {
       .catch((err) => console.log(err));
   }, [productsChanged]);
 
-  // פילטור מוצרים
+  // פילטור מוצרים לפי חיפוש וקטגוריה
   useEffect(() => {
     let filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,6 +59,14 @@ const Products: FunctionComponent<ProductsProps> = () => {
     setFilteredProducts(filtered);
   }, [searchTerm, selectedCategory, products]);
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handleCategoryFilter = (category: string) => {
+    setSelectedCategory(category);
+  };
+
   const handleAddProduct = () => {
     setOpenAddModal(true);
   };
@@ -61,128 +75,224 @@ const Products: FunctionComponent<ProductsProps> = () => {
     setProductsChanged(!productsChanged);
   };
 
-  return (
-    <Layout containerFluid title="המוצרים שלנו">
-      {/* כלי בר עליון */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="d-flex gap-3 align-items-center">
-          {/* חיפוש */}
-          <div className="input-group" style={{width: "300px"}}>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="חפש מוצרים..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+  const renderCards = () => (
+    <div className="row">
+      {filteredProducts.map((product: Product) => (
+        <div key={product._id} className="col-lg-4 col-md-6 mb-4">
+          <div className="card h-100 shadow-sm">
+            <div className="card-header bg-info text-white">
+              <small>{product.category}</small>
+            </div>
+            <img
+              src={product.image}
+              className="card-img-top"
+              alt={`תמונה של ${product.name}`}
+              title={product.name}
+              style={{ height: "200px", objectFit: "cover" }}
             />
-            <button className="btn btn-outline-info">
-              <i className="fas fa-search"></i>
-            </button>
-          </div>
-
-          {/* סינון קטגוריות */}
-          <select
-            className="form-select"
-            style={{width: "200px"}}
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            <option value="all">כל הקטגוריות</option>
-            {categories.slice(1).map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* כפתור הוספה למנהלים */}
-        {isAdmin && (
-          <button className="btn btn-success" onClick={handleAddProduct}>
-            <i className="fas fa-plus me-2"></i>
-            הוסף מוצר
-          </button>
-        )}
-      </div>
-
-      {/* תוצאות */}
-      <div className="mb-3">
-        <small className="text-muted">
-          נמצאו {filteredProducts.length} מוצרים
-          {searchTerm && ` עבור "${searchTerm}"`}
-        </small>
-      </div>
-
-      {/* רשת מוצרים */}
-      {filteredProducts.length ? (
-        <div className="row">
-          {filteredProducts.map((product: Product) => (
-            <div key={product._id} className="col-lg-3 col-md-4 col-sm-6 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-header bg-info text-white">
-                  <small>{product.category}</small>
-                </div>
-                <img
-                  src={product.image}
-                  className="card-img-top"
-                  alt={`תמונה של ${product.name}`}
-                  style={{ height: "200px", objectFit: "cover" }}
-                />
-                <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{product.name}</h5>
-                  <p className="card-text text-muted small flex-grow-1">
-                    {product.description}
-                  </p>
-                  <p className="card-text text-success fw-bold fs-5">
-                    ₪{product.price}
-                  </p>
-                  
-                  <div className="d-flex gap-2">
+            <div className="card-body d-flex flex-column">
+              <h5 className="card-title">{product.name}</h5>
+              <p className="card-text flex-grow-1">{product.description}</p>
+              <p className="card-text text-success fw-bold fs-5">{product.price}₪</p>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-primary flex-grow-1"
+                  onClick={() => {
+                    addToCart(product._id as string)
+                      .then(() => {
+                        alert("המוצר נוסף לעגלה בהצלחה");
+                      })
+                      .catch((err) => console.log(err));
+                  }}
+                >
+                  <i className="fa fa-cart-plus me-2"></i>
+                  הוסף לעגלה
+                </button>
+                {isAdmin && (
+                  <>
                     <button
-                      className="btn btn-primary flex-grow-1"
+                      className="btn btn-warning"
                       onClick={() => {
-                        addToCart(product._id as string)
-                          .then(() => alert("המוצר נוסף לעגלה!"))
-                          .catch(err => console.log(err));
+                        setOpenUpdateModal(true);
+                        setProductId(product._id as string);
                       }}
+                      title="ערוך מוצר"
                     >
-                      <i className="fas fa-cart-plus me-1"></i>
-                      עגלה
+                      <i className="fa fa-edit"></i>
                     </button>
-                    
-                    {isAdmin && (
-                      <>
-                        <button
-                          className="btn btn-warning"
-                          onClick={() => {
-                            setOpenUpdateModal(true);
-                            setProductId(product._id as string);
-                          }}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => {
-                            setOpenDeleteModal(true);
-                            setProductId(product._id as string);
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => {
+                        setOpenDeleteModal(true);
+                        setProductId(product._id as string);
+                      }}
+                      title="מחק מוצר"
+                    >
+                      <i className="fa fa-trash"></i>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderTable = () => (
+    <div className="table-responsive">
+      <table className="table table-striped table-hover">
+        <thead className="table-dark">
+          <tr>
+            <th>תמונה</th>
+            <th>שם מוצר</th>
+            <th>קטגוריה</th>
+            <th>מחיר</th>
+            <th>תיאור</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredProducts.map((product: Product) => (
+            <tr key={product._id}>
+              <td>
+                <img
+                  src={product.image}
+                  alt={`תמונה של ${product.name}`}
+                  style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                  className="rounded"
+                />
+              </td>
+              <td className="fw-bold">{product.name}</td>
+              <td>
+                <span className="badge bg-info">{product.category}</span>
+              </td>
+              <td className="text-success fw-bold">{product.price}₪</td>
+              <td>
+                <small>{product.description.substring(0, 50)}...</small>
+              </td>
+              <td>
+                <div className="d-flex gap-1">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => {
+                      addToCart(product._id as string)
+                        .then(() => {
+                          alert("המוצר נוסף לעגלה בהצלחה");
+                        })
+                        .catch((err) => console.log(err));
+                    }}
+                    title="הוסף לעגלה"
+                  >
+                    <i className="fa fa-cart-plus"></i>
+                  </button>
+                  {isAdmin && (
+                    <>
+                      <button
+                        className="btn btn-sm btn-warning"
+                        onClick={() => {
+                          setOpenUpdateModal(true);
+                          setProductId(product._id as string);
+                        }}
+                        title="ערוך"
+                      >
+                        <i className="fa fa-edit"></i>
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => {
+                          setOpenDeleteModal(true);
+                          setProductId(product._id as string);
+                        }}
+                        title="מחק"
+                      >
+                        <i className="fa fa-trash"></i>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </td>
+            </tr>
           ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <>
+      <Navbar />
+      <div className="container my-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h1 className="display-5">המוצרים שלנו</h1>
+          {isAdmin && (
+            <button className="btn btn-success" onClick={handleAddProduct}>
+              <i className="fa fa-plus me-2"></i>
+              הוסף מוצר
+            </button>
+          )}
         </div>
-      ) : (
-        <div className="text-center py-5">
-          <i className="fas fa-search fa-3x text-muted mb-3"></i>
-          <h4 className="text-muted">לא נמצאו מוצרים</h4>
-          <p className="text-muted">נסה לשנות את תנאי החיפוש</p>
+
+        {/* שורת חיפוש וסינון */}
+        <div className="row mb-4">
+          <div className="col-lg-6">
+            <SearchBar onSearch={handleSearch} placeholder="חפש מוצרים לפי שם או תיאור..." />
+          </div>
+          <div className="col-lg-3">
+            <select
+              className="form-select"
+              value={selectedCategory}
+              onChange={(e) => handleCategoryFilter(e.target.value)}
+            >
+              <option value="all">כל הקטגוריות</option>
+              {categories.slice(1).map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-lg-3">
+            <div className="btn-group w-100" role="group">
+              <button
+                type="button"
+                className={`btn ${viewMode === 'cards' ? 'btn-info' : 'btn-outline-info'}`}
+                onClick={() => setViewMode('cards')}
+                title="תצוגת כרטיסים"
+              >
+                <i className="fa fa-th-large"></i>
+              </button>
+              <button
+                type="button"
+                className={`btn ${viewMode === 'table' ? 'btn-info' : 'btn-outline-info'}`}
+                onClick={() => setViewMode('table')}
+                title="תצוגת טבלה"
+              >
+                <i className="fa fa-table"></i>
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* תוצאות החיפוש */}
+        <div className="mb-3">
+          <small className="text-muted">
+            נמצאו {filteredProducts.length} מוצרים
+            {searchTerm && ` עבור "${searchTerm}"`}
+            {selectedCategory !== "all" && ` בקטגוריה "${selectedCategory}"`}
+          </small>
+        </div>
+
+        {/* תצוגת המוצרים */}
+        {filteredProducts.length ? (
+          viewMode === 'cards' ? renderCards() : renderTable()
+        ) : (
+          <div className="text-center py-5">
+            <i className="fa fa-search fa-3x text-muted mb-3"></i>
+            <h4 className="text-muted">לא נמצאו מוצרים</h4>
+            <p className="text-muted">נסה לשנות את תנאי החיפוש</p>
+          </div>
+        )}
+      </div>
 
       {/* מודלים */}
       <AddProductModal
@@ -202,7 +312,9 @@ const Products: FunctionComponent<ProductsProps> = () => {
         refresh={refresh}
         productId={productId}
       />
-    </Layout>
+      
+      <Footer />
+    </>
   );
 };
 

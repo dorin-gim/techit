@@ -53,6 +53,12 @@ const Navbar: FunctionComponent<NavbarProps> = () => {
                 </NavLink>
               </li>
               <li className="nav-item">
+                <NavLink className="nav-link" aria-current="page" to="/favorites">
+                  <i className="fas fa-heart me-1"></i>
+                  מועדפים
+                </NavLink>
+              </li>
+              <li className="nav-item">
                 <NavLink className="nav-link" aria-current="page" to="/about">
                   <i className="fas fa-info-circle me-1"></i>
                   אודות
