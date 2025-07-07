@@ -4,10 +4,7 @@ const Joi = require("joi");
 const Product = require("../models/Product");
 const router = express.Router();
 
-// מלאי ראשוני מכל מוצר: 5
-// כל הוספה לעגלה מורידה מהמלאי הכולל
-// ברגע שהמלאי יורד ל0 אז סטטוס משתנה
-// available: false
+
 
 const productsSchema = Joi.object({
   _id: Joi.string(),

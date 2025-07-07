@@ -1,12 +1,13 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { Product } from "../interfaces/Product";
 import { getProductsFromCart } from "../services/cartsService";
-import Navbar from "./Navbar";
+import Layout from "./Layout";
 
 interface CartProps {}
 
 const Cart: FunctionComponent<CartProps> = () => {
   let [products, setProducts] = useState<any>([]);
+  
   useEffect(() => {
     getProductsFromCart()
       .then((res: any) => {
@@ -14,17 +15,52 @@ const Cart: FunctionComponent<CartProps> = () => {
         setProducts(products);
       })
       .catch((err) => console.log(err));
-  });
+  }, []);
 
   return (
-    <>
-    <Navbar/>
+    <Layout title="עגלת הקניות שלי">
       {products.length ? (
-        products.map((p: any) => <p key={p.id}>{p.name}</p>)
+        <div className="row">
+          {products.map((p: any) => (
+            <div key={p.id} className="col-md-6 mb-3">
+              <div className="card">
+                <div className="card-body">
+                  <h5 className="card-title">{p.name}</h5>
+                  <p className="card-text text-success fw-bold">₪{p.price}</p>
+                  <button className="btn btn-danger btn-sm">
+                    <i className="fas fa-trash me-1"></i>הסר
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="col-12 mt-3">
+            <div className="card bg-light">
+              <div className="card-body text-center">
+                <h5>סה"כ לתשלום</h5>
+                <h3 className="text-success">
+                  ₪{products.reduce((sum: number, p: any) => sum + p.price, 0)}
+                </h3>
+                <button className="btn btn-success btn-lg">
+                  <i className="fas fa-credit-card me-2"></i>
+                  המשך לתשלום
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
-        <p>No products in cart</p>
+        <div className="text-center py-5">
+          <i className="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+          <h4 className="text-muted">העגלה ריקה</h4>
+          <p className="text-muted">הוסף מוצרים כדי להתחיל לקנות</p>
+          <a href="/products" className="btn btn-primary">
+            <i className="fas fa-shopping-bag me-2"></i>
+            התחל לקנות
+          </a>
+        </div>
       )}
-    </>
+    </Layout>
   );
 };
 

@@ -5,6 +5,7 @@ interface NavbarProps {}
 
 const Navbar: FunctionComponent<NavbarProps> = () => {
   const navigate: NavigateFunction = useNavigate();
+  
   return (
     <>
       <nav
@@ -13,6 +14,7 @@ const Navbar: FunctionComponent<NavbarProps> = () => {
       >
         <div className="container-fluid">
           <NavLink className="navbar-brand text-info" to="/home">
+            <i className="fas fa-laptop me-2"></i>
             TechIt
           </NavLink>
           <button
@@ -30,26 +32,36 @@ const Navbar: FunctionComponent<NavbarProps> = () => {
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
                 <NavLink className="nav-link" aria-current="page" to="/home">
-                  Home
+                  <i className="fas fa-home me-1"></i>
+                  בית
                 </NavLink>
               </li>
-              <li>
+              <li className="nav-item">
                 <NavLink
                   className="nav-link"
                   aria-current="page"
                   to="/products"
                 >
-                  Products
+                  <i className="fas fa-box me-1"></i>
+                  מוצרים
                 </NavLink>
               </li>
-              <li>
+              <li className="nav-item">
                 <NavLink className="nav-link" aria-current="page" to="/cart">
-                  Cart
+                  <i className="fas fa-shopping-cart me-1"></i>
+                  עגלה
                 </NavLink>
               </li>
-              <li>
+              <li className="nav-item">
+                <NavLink className="nav-link" aria-current="page" to="/about">
+                  <i className="fas fa-info-circle me-1"></i>
+                  אודות
+                </NavLink>
+              </li>
+              <li className="nav-item">
                 <NavLink className="nav-link" aria-current="page" to="/profile">
-                  Profile
+                  <i className="fas fa-user me-1"></i>
+                  פרופיל
                 </NavLink>
               </li>
             </ul>
@@ -57,12 +69,14 @@ const Navbar: FunctionComponent<NavbarProps> = () => {
               <button
                 className="btn btn-outline-info"
                 type="submit"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   navigate("/");
                   localStorage.removeItem("token");
                 }}
               >
-                Logout
+                <i className="fas fa-sign-out-alt me-1"></i>
+                התנתק
               </button>
             </form>
           </div>

@@ -9,10 +9,14 @@ import Profile from "./components/Profile";
 import PageNotFound from "./components/PageNotFound";
 import Products from "./components/Products";
 import Cart from "./components/Cart";
+import About from "./components/About";
 
 function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>();
-  useEffect(() => {}, []);
+  
+  useEffect(() => {
+  }, []);
+
   return (
     <div className="App">
       <Router>
@@ -23,6 +27,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/about" element={<About />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Router>
