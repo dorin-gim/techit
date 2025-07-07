@@ -10,6 +10,7 @@ import UpdateProductModal from "./UpdateProductModal";
 import DeleteProductModal from "./DeleteProductModal";
 import FavoriteButton from "./FavoriteButton";
 import { addToCart } from "../services/cartsService";
+import { Link } from "react-router-dom";
 
 interface ProductsProps {}
 
@@ -45,7 +46,11 @@ const Products: FunctionComponent<ProductsProps> = () => {
         setProducts(res.data);
         setFilteredProducts(res.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        // טיפול שקט בשגיאות - ניתן להוסיף התראה למשתמש
+        setProducts([]);
+        setFilteredProducts([]);
+      });
   }, [productsChanged]);
 
   // פילטור מוצרים לפי חיפוש וקטגוריה
@@ -80,21 +85,51 @@ const Products: FunctionComponent<ProductsProps> = () => {
       {filteredProducts.map((product: Product) => (
         <div key={product._id} className="col-lg-4 col-md-6 mb-4">
           <div className="card h-100 shadow-sm">
-            <div className="card-header bg-info text-white">
+            <div className="card-header bg-info text-white d-flex justify-content-between align-items-center">
               <small>{product.category}</small>
+              <span className={`badge ${product.available ? "bg-success" : "bg-danger"}`}>
+                {product.available ? "זמין" : "אזל"}
+              </span>
             </div>
-            <img
-              src={product.image}
-              className="card-img-top"
-              alt={`תמונה של ${product.name}`}
-              title={product.name}
-              style={{ height: "200px", objectFit: "cover" }}
-            />
+            
+            {/* תמונה עם קישור */}
+            <Link to={`/products/${product._id}`} className="text-decoration-none">
+              <img
+                src={product.image}
+                className="card-img-top"
+                alt={`תמונה של ${product.name}`}
+                title={`לחץ לצפייה בפרטי ${product.name}`}
+                style={{ height: "200px", objectFit: "cover", cursor: "pointer" }}
+              />
+            </Link>
+            
             <div className="card-body d-flex flex-column">
-              <h5 className="card-title">{product.name}</h5>
+              {/* שם המוצר עם קישור */}
+              <h5 className="card-title">
+                <Link 
+                  to={`/products/${product._id}`} 
+                  className="text-decoration-none text-dark"
+                  title={`צפה בפרטי ${product.name}`}
+                >
+                  {product.name}
+                </Link>
+              </h5>
+              
               <p className="card-text flex-grow-1">{product.description}</p>
               <p className="card-text text-success fw-bold fs-5">{product.price}₪</p>
-              <div className="d-flex gap-2">
+              
+              <div className="d-flex gap-2 flex-wrap">
+                {/* כפתור פרטים */}
+                <Link 
+                  to={`/products/${product._id}`}
+                  className="btn btn-outline-info btn-sm"
+                  title={`צפה בפרטי ${product.name}`}
+                >
+                  <i className="fas fa-eye me-1"></i>
+                  פרטים
+                </Link>
+                
+                {/* כפתור הוספה לעגלה */}
                 <button
                   className="btn btn-primary flex-grow-1"
                   onClick={() => {
@@ -102,16 +137,27 @@ const Products: FunctionComponent<ProductsProps> = () => {
                       .then(() => {
                         alert("המוצר נוסף לעגלה בהצלחה");
                       })
-                      .catch((err) => console.log(err));
+                      .catch(() => {
+                        alert("שגיאה בהוספת המוצר לעגלה");
+                      });
                   }}
+                  disabled={!product.available}
                 >
                   <i className="fa fa-cart-plus me-2"></i>
-                  הוסף לעגלה
+                  {product.available ? "הוסף לעגלה" : "אזל מהמלאי"}
                 </button>
+                
+                {/* כפתור מועדפים */}
+                <FavoriteButton 
+                  productId={product._id as string}
+                  className="btn"
+                />
+                
+                {/* כפתורי מנהל */}
                 {isAdmin && (
                   <>
                     <button
-                      className="btn btn-warning"
+                      className="btn btn-warning btn-sm"
                       onClick={() => {
                         setOpenUpdateModal(true);
                         setProductId(product._id as string);
@@ -121,7 +167,7 @@ const Products: FunctionComponent<ProductsProps> = () => {
                       <i className="fa fa-edit"></i>
                     </button>
                     <button
-                      className="btn btn-danger"
+                      className="btn btn-danger btn-sm"
                       onClick={() => {
                         setOpenDeleteModal(true);
                         setProductId(product._id as string);
@@ -157,14 +203,25 @@ const Products: FunctionComponent<ProductsProps> = () => {
           {filteredProducts.map((product: Product) => (
             <tr key={product._id}>
               <td>
-                <img
-                  src={product.image}
-                  alt={`תמונה של ${product.name}`}
-                  style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                  className="rounded"
-                />
+                <Link to={`/products/${product._id}`}>
+                  <img
+                    src={product.image}
+                    alt={`תמונה של ${product.name}`}
+                    style={{ width: "50px", height: "50px", objectFit: "cover", cursor: "pointer" }}
+                    className="rounded"
+                    title={`לחץ לצפייה בפרטי ${product.name}`}
+                  />
+                </Link>
               </td>
-              <td className="fw-bold">{product.name}</td>
+              <td className="fw-bold">
+                <Link 
+                  to={`/products/${product._id}`} 
+                  className="text-decoration-none"
+                  title={`צפה בפרטי ${product.name}`}
+                >
+                  {product.name}
+                </Link>
+              </td>
               <td>
                 <span className="badge bg-info">{product.category}</span>
               </td>
@@ -173,7 +230,17 @@ const Products: FunctionComponent<ProductsProps> = () => {
                 <small>{product.description.substring(0, 50)}...</small>
               </td>
               <td>
-                <div className="d-flex gap-1">
+                <div className="d-flex gap-1 flex-wrap">
+                  {/* כפתור פרטים */}
+                  <Link 
+                    to={`/products/${product._id}`}
+                    className="btn btn-sm btn-outline-info"
+                    title={`צפה בפרטי ${product.name}`}
+                  >
+                    <i className="fas fa-eye"></i>
+                  </Link>
+                  
+                  {/* כפתור הוספה לעגלה */}
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => {
@@ -181,12 +248,23 @@ const Products: FunctionComponent<ProductsProps> = () => {
                         .then(() => {
                           alert("המוצר נוסף לעגלה בהצלחה");
                         })
-                        .catch((err) => console.log(err));
+                        .catch(() => {
+                          alert("שגיאה בהוספת המוצר לעגלה");
+                        });
                     }}
                     title="הוסף לעגלה"
+                    disabled={!product.available}
                   >
                     <i className="fa fa-cart-plus"></i>
                   </button>
+                  
+                  {/* כפתור מועדפים */}
+                  <FavoriteButton 
+                    productId={product._id as string}
+                    className="btn btn-sm"
+                  />
+                  
+                  {/* כפתורי מנהל */}
                   {isAdmin && (
                     <>
                       <button

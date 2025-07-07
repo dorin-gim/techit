@@ -22,35 +22,60 @@ const UpdateProduct: FunctionComponent<UpdateProductProps> = ({
     description: "",
     image: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     getProductById(productId)
       .then((res) => {
         setProduct(res.data);
       })
-      .catch((err) => console.log(err));
-  }, []);
+      .catch(() => {
+        alert("שגיאה בטעינת פרטי המוצר");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [productId]);
 
   const formik: FormikValues = useFormik({
     initialValues: product,
     enableReinitialize: true,
     validationSchema: yup.object({
-      name: yup.string().required().min(2),
-      price: yup.number().required().moreThan(0),
-      category: yup.string().required().min(2),
-      description: yup.string().required().min(2),
-      image: yup.string().required().url(),
+      name: yup.string().required("שם המוצר נדרש").min(2, "שם חייב להכיל לפחות 2 תווים"),
+      price: yup.number().required("מחיר נדרש").moreThan(0, "מחיר חייב להיות גדול מ-0"),
+      category: yup.string().required("קטגוריה נדרשת").min(2, "קטגוריה חייבת להכיל לפחות 2 תווים"),
+      description: yup.string().required("תיאור נדרש").min(2, "תיאור חייב להכיל לפחות 2 תווים"),
+      image: yup.string().required("תמונה נדרשת").url("כתובת URL לא תקינה"),
     }),
-    onSubmit: (values) => {
-      updateProduct({ ...values, _id: productId })
-        .then(() => {
-          alert("Product was updated successfully!");
-          onHide();
-          refresh();
-        })
-        .catch((err) => console.log(err));
+    onSubmit: async (values) => {
+      setIsSubmitting(true);
+      try {
+        await updateProduct({ ...values, _id: productId });
+        alert("המוצר עודכן בהצלחה!");
+        onHide();
+        refresh();
+      } catch (error: any) {
+        const errorMessage = error.response?.data || "שגיאה בעדכון המוצר";
+        alert(errorMessage);
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
+
+  if (loading) {
+    return (
+      <div className="text-center py-4">
+        <div className="spinner-border text-info" role="status">
+          <span className="visually-hidden">טוען...</span>
+        </div>
+        <p className="mt-2 text-muted">טוען פרטי מוצר...</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="container w-75">
@@ -58,89 +83,134 @@ const UpdateProduct: FunctionComponent<UpdateProductProps> = ({
           <div className="form-floating mb-3">
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${
+                formik.touched.name && formik.errors.name
+                  ? "is-invalid"
+                  : formik.touched.name
+                  ? "is-valid"
+                  : ""
+              }`}
               id="name"
-              placeholder="Laptop"
+              placeholder="שם המוצר"
               name="name"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
-            <label htmlFor="name">Name</label>
+            <label htmlFor="name">שם המוצר</label>
             {formik.touched.name && formik.errors.name && (
-              <p className="text-danger">{formik.errors.name}</p>
+              <div className="invalid-feedback">{formik.errors.name}</div>
             )}
           </div>
+
           <div className="form-floating mb-3">
             <input
               type="number"
-              className="form-control"
+              className={`form-control ${
+                formik.touched.price && formik.errors.price
+                  ? "is-invalid"
+                  : formik.touched.price
+                  ? "is-valid"
+                  : ""
+              }`}
               id="price"
-              placeholder="name@example.com"
+              placeholder="מחיר"
               name="price"
               value={formik.values.price}
               onBlur={formik.handleBlur}
               onChange={formik.handleChange}
             />
-            <label htmlFor="price">Price</label>
+            <label htmlFor="price">מחיר (₪)</label>
             {formik.touched.price && formik.errors.price && (
-              <p className="text-danger">{formik.errors.price}</p>
+              <div className="invalid-feedback">{formik.errors.price}</div>
             )}
           </div>
+
           <div className="form-floating mb-3">
             <input
               type="text"
-              className="form-control"
-              id="catgeory"
-              placeholder="category"
+              className={`form-control ${
+                formik.touched.category && formik.errors.category
+                  ? "is-invalid"
+                  : formik.touched.category
+                  ? "is-valid"
+                  : ""
+              }`}
+              id="category"
+              placeholder="קטגוריה"
               name="category"
               value={formik.values.category}
               onBlur={formik.handleBlur}
               onChange={formik.handleChange}
             />
-            <label htmlFor="catgeory">Category</label>
+            <label htmlFor="category">קטגוריה</label>
             {formik.touched.category && formik.errors.category && (
-              <p className="text-danger">{formik.errors.category}</p>
+              <div className="invalid-feedback">{formik.errors.category}</div>
             )}
           </div>
+
           <div className="form-floating mb-3">
-            <input
-              type="text"
-              className="form-control"
+            <textarea
+              className={`form-control ${
+                formik.touched.description && formik.errors.description
+                  ? "is-invalid"
+                  : formik.touched.description
+                  ? "is-valid"
+                  : ""
+              }`}
               id="description"
-              placeholder="description"
+              placeholder="תיאור"
               name="description"
               value={formik.values.description}
               onBlur={formik.handleBlur}
               onChange={formik.handleChange}
+              style={{ height: "100px" }}
             />
-            <label htmlFor="description">Description</label>
+            <label htmlFor="description">תיאור המוצר</label>
             {formik.touched.description && formik.errors.description && (
-              <p className="text-danger">{formik.errors.description}</p>
+              <div className="invalid-feedback">{formik.errors.description}</div>
             )}
           </div>
+
           <div className="form-floating mb-3">
             <input
-              type="text"
-              className="form-control"
+              type="url"
+              className={`form-control ${
+                formik.touched.image && formik.errors.image
+                  ? "is-invalid"
+                  : formik.touched.image
+                  ? "is-valid"
+                  : ""
+              }`}
               id="image"
-              placeholder="image"
+              placeholder="כתובת תמונה"
               name="image"
               value={formik.values.image}
               onBlur={formik.handleBlur}
               onChange={formik.handleChange}
             />
-            <label htmlFor="image">Image</label>
+            <label htmlFor="image">כתובת תמונה (URL)</label>
             {formik.touched.image && formik.errors.image && (
-              <p className="text-danger">{formik.errors.image}</p>
+              <div className="invalid-feedback">{formik.errors.image}</div>
             )}
           </div>
+
           <button
             className="btn btn-warning mt-3 w-100"
             type="submit"
-            disabled={!formik.dirty || !formik.isValid}
+            disabled={!formik.dirty || !formik.isValid || isSubmitting}
           >
-            Update
+            {isSubmitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2"></span>
+                מעדכן מוצר...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-edit me-2"></i>
+                עדכן מוצר
+              </>
+            )}
           </button>
         </form>
       </div>

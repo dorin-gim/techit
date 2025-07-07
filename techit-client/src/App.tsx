@@ -8,6 +8,7 @@ import Register from "./components/Register";
 import Profile from "./components/Profile";
 import PageNotFound from "./components/PageNotFound";
 import Products from "./components/Products";
+import ProductDetails from "./components/ProductDetails";
 import Cart from "./components/Cart";
 import About from "./components/About";
 import Favorites from "./components/Favorites";
@@ -16,7 +17,15 @@ function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>();
   
   useEffect(() => {
-    // כאן ניתן להוסיף לוגיקה לבדיקת הרשאות משתמש
+    // בדיקת הרשאות משתמש בעת טעינת האפליקציה
+    try {
+      if (localStorage.getItem("token")) {
+        // ניתן להוסיף כאן לוגיקה נוספת
+      }
+    } catch (error) {
+      // טיפול שקט בשגיאות
+      localStorage.removeItem("token");
+    }
   }, []);
 
   return (
@@ -28,6 +37,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:productId" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/about" element={<About />} />

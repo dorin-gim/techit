@@ -7,15 +7,55 @@ interface CartProps {}
 
 const Cart: FunctionComponent<CartProps> = () => {
   let [products, setProducts] = useState<any>([]);
+  let [loading, setLoading] = useState(true);
+  let [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
+    setLoading(true);
     getProductsFromCart()
       .then((res: any) => {
         let products = res.map((item: any) => item.data);
         setProducts(products);
+        setError(null);
       })
-      .catch((err) => console.log(err));
+      .catch(() => {
+        setError("שגיאה בטעינת עגלת הקניות");
+        setProducts([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
+
+  if (loading) {
+    return (
+      <Layout title="עגלת הקניות שלי">
+        <div className="text-center py-5">
+          <div className="spinner-border text-info" role="status">
+            <span className="visually-hidden">טוען...</span>
+          </div>
+          <p className="mt-2 text-muted">טוען עגלת קניות...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout title="עגלת הקניות שלי">
+        <div className="text-center py-5">
+          <i className="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+          <h4 className="text-muted">{error}</h4>
+          <button 
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            נסה שוב
+          </button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="עגלת הקניות שלי">

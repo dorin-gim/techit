@@ -1,6 +1,10 @@
-/* App.css - עדכון לתמיכה ב-Layout */
+/* App.css - עיצובים ספציפיים לאפליקציה */
+
 .App {
   text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .App-logo {
@@ -38,77 +42,168 @@
   }
 }
 
-/* Layout Support */
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+/* App Specific Overrides */
+.App .main-content {
+  flex: 1;
+  width: 100%;
 }
 
-.min-vh-100 {
+/* Global App Styles */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Loading States */
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 100vh;
+  background: #f8f9fa;
 }
 
-/* Card Hover Effects */
-.card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.app-loading .spinner-border {
+  width: 3rem;
+  height: 3rem;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+/* Error Boundary Styles */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: #f8f9fa;
+  text-align: center;
 }
 
-/* Product Cards */
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+.error-boundary h1 {
+  color: #dc3545;
+  margin-bottom: 1rem;
 }
 
-/* Search and Filter Improvements */
-.form-control:focus,
-.form-select:focus {
-  border-color: #0dcaf0;
-  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+.error-boundary p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
 }
 
-/* Responsive Utilities */
+.error-boundary .btn {
+  min-width: 120px;
+}
+
+/* Responsive App Layout */
 @media (max-width: 768px) {
-  .display-5 {
-    font-size: 2rem;
+  .App {
+    text-align: right;
   }
   
-  .container {
-    padding-left: 15px;
-    padding-right: 15px;
+  .App-header {
+    font-size: calc(8px + 2vmin);
+    padding: 1rem;
+  }
+  
+  .error-boundary {
+    padding: 1rem;
   }
 }
 
-/* Badge Improvements */
-.badge.fs-6 {
-  font-size: 0.75rem !important;
-  padding: 0.5em 0.75em;
+/* Performance Optimizations */
+.App * {
+  box-sizing: border-box;
 }
 
-/* Button Improvements */
-.btn {
-  transition: all 0.2s ease;
+.App img {
+  max-width: 100%;
+  height: auto;
 }
 
-.btn:hover {
-  transform: translateY(-1px);
+/* Accessibility Improvements */
+.App [role="button"] {
+  cursor: pointer;
 }
 
-/* Footer Spacing */
-footer {
-  margin-top: auto;
+.App .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-/* Text Direction Support */
-.text-start {
-  text-align: start;
+/* High Contrast Support */
+@media (prefers-contrast: high) {
+  .App {
+    background: #ffffff;
+    color: #000000;
+  }
+  
+  .App-header {
+    background-color: #000000;
+    color: #ffffff;
+  }
 }
 
-.text-end {
-  text-align: end;
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .App {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .app-loading {
+    background: #1a1a1a;
+  }
+  
+  .error-boundary {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .error-boundary h1 {
+    color: #ff6b6b;
+  }
+  
+  .error-boundary p {
+    color: #adb5bd;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .App {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .App-header {
+    display: none;
+  }
+  
+  .app-loading {
+    display: none;
+  }
 }
