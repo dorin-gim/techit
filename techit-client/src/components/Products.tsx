@@ -1,4 +1,5 @@
 import { FunctionComponent, useEffect, useState } from "react";
+import { toast } from 'react-toastify';
 import { Product } from "../interfaces/Product";
 import { getAllProducts } from "../services/productsService";
 import Navbar from "./Navbar";
@@ -9,8 +10,9 @@ import AddProductModal from "./AddProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import DeleteProductModal from "./DeleteProductModal";
 import FavoriteButton from "./FavoriteButton";
-import { addToCart } from "../services/cartsService";
 import { Link } from "react-router-dom";
+import { useCart } from "../hooks/redux";
+import { addToCartAsync, addToCartLocal, fetchCartItems } from "../store/cartSlice";
 
 interface ProductsProps {}
 
@@ -29,32 +31,32 @@ const Products: FunctionComponent<ProductsProps> = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  // Redux cart hook
+  const { dispatch, loading: cartLoading } = useCart();
+
   // קבלת קטגוריות ייחודיות
   const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))];
 
   useEffect(() => {
     // בדיקה אם מנהל
     if (localStorage.getItem("token") != null) {
-      let payload = getPayloadFromToken();
-      setIsAdmin(payload.isAdmin);
+      try {
+        let payload = getPayloadFromToken();
+        setIsAdmin(payload.isAdmin);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
     }
   }, []);
 
   useEffect(() => {
-    getAllProducts()
-      .then((res) => {
-        setProducts(res.data);
-        setFilteredProducts(res.data);
-      })
-      .catch((err) => {
-        // טיפול שקט בשגיאות - ניתן להוסיף התראה למשתמש
-        setProducts([]);
-        setFilteredProducts([]);
-      });
-  }, [productsChanged]);
+    loadProducts();
+    // טען גם את עגלת הקניות
+    dispatch(fetchCartItems());
+  }, [productsChanged, dispatch]);
 
-  // פילטור מוצרים לפי חיפוש וקטגוריה
   useEffect(() => {
+    // פילטור מוצרים לפי חיפוש וקטגוריה
     let filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -63,6 +65,20 @@ const Products: FunctionComponent<ProductsProps> = () => {
     });
     setFilteredProducts(filtered);
   }, [searchTerm, selectedCategory, products]);
+
+  const loadProducts = () => {
+    getAllProducts()
+      .then((res) => {
+        setProducts(res.data);
+        setFilteredProducts(res.data);
+      })
+      .catch((err) => {
+        console.error("Error loading products:", err);
+        toast.error("שגיאה בטעינת המוצרים");
+        setProducts([]);
+        setFilteredProducts([]);
+      });
+  };
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -80,11 +96,34 @@ const Products: FunctionComponent<ProductsProps> = () => {
     setProductsChanged(!productsChanged);
   };
 
+  // פונקציה מעודכנת להוספה לעגלה עם Redux
+  const handleAddToCart = async (product: Product) => {
+    if (!product.available) {
+      toast.error("המוצר אינו זמין כעת");
+      return;
+    }
+
+    try {
+      // הוסף לעגלה במצב לוקלי מיידית לUX טוב
+      dispatch(addToCartLocal(product));
+      toast.success(`${product.name} נוסף לעגלה!`);
+
+      // שלח לשרת ברקע
+      await dispatch(addToCartAsync(product._id as string)).unwrap();
+      
+      // רענן את העגלה מהשרת
+      dispatch(fetchCartItems());
+    } catch (error: any) {
+      // אם השרת נכשל, הצג הודעת שגיאה
+      toast.error(error || "שגיאה בהוספה לעגלה");
+    }
+  };
+
   const renderCards = () => (
     <div className="row">
       {filteredProducts.map((product: Product) => (
         <div key={product._id} className="col-lg-4 col-md-6 mb-4">
-          <div className="card h-100 shadow-sm">
+          <div className="card h-100 shadow-sm product-card">
             <div className="card-header bg-info text-white d-flex justify-content-between align-items-center">
               <small>{product.category}</small>
               <span className={`badge ${product.available ? "bg-success" : "bg-danger"}`}>
@@ -100,6 +139,9 @@ const Products: FunctionComponent<ProductsProps> = () => {
                 alt={`תמונה של ${product.name}`}
                 title={`לחץ לצפייה בפרטי ${product.name}`}
                 style={{ height: "200px", objectFit: "cover", cursor: "pointer" }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x300?text=תמונה+לא+זמינה";
+                }}
               />
             </Link>
             
@@ -115,10 +157,18 @@ const Products: FunctionComponent<ProductsProps> = () => {
                 </Link>
               </h5>
               
-              <p className="card-text flex-grow-1">{product.description}</p>
-              <p className="card-text text-success fw-bold fs-5">{product.price}₪</p>
+              <p className="card-text flex-grow-1 text-muted small">
+                {product.description.length > 100 
+                  ? `${product.description.substring(0, 100)}...` 
+                  : product.description
+                }
+              </p>
               
-              <div className="d-flex gap-2 flex-wrap">
+              <p className="card-text price-tag mb-3">
+                ₪{product.price.toLocaleString()}
+              </p>
+              
+              <div className="d-flex gap-2 flex-wrap mt-auto">
                 {/* כפתור פרטים */}
                 <Link 
                   to={`/products/${product._id}`}
@@ -132,19 +182,21 @@ const Products: FunctionComponent<ProductsProps> = () => {
                 {/* כפתור הוספה לעגלה */}
                 <button
                   className="btn btn-primary flex-grow-1"
-                  onClick={() => {
-                    addToCart(product._id as string)
-                      .then(() => {
-                        alert("המוצר נוסף לעגלה בהצלחה");
-                      })
-                      .catch(() => {
-                        alert("שגיאה בהוספת המוצר לעגלה");
-                      });
-                  }}
-                  disabled={!product.available}
+                  onClick={() => handleAddToCart(product)}
+                  disabled={!product.available || cartLoading}
+                  title={product.available ? "הוסף לעגלה" : "אזל מהמלאי"}
                 >
-                  <i className="fa fa-cart-plus me-2"></i>
-                  {product.available ? "הוסף לעגלה" : "אזל מהמלאי"}
+                  {cartLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      מוסיף...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa fa-cart-plus me-2"></i>
+                      {product.available ? "הוסף לעגלה" : "אזל מהמלאי"}
+                    </>
+                  )}
                 </button>
                 
                 {/* כפתור מועדפים */}
@@ -188,7 +240,7 @@ const Products: FunctionComponent<ProductsProps> = () => {
 
   const renderTable = () => (
     <div className="table-responsive">
-      <table className="table table-striped table-hover">
+      <table className="table table-striped table-hover table-modern">
         <thead className="table-dark">
           <tr>
             <th>תמונה</th>
@@ -210,6 +262,9 @@ const Products: FunctionComponent<ProductsProps> = () => {
                     style={{ width: "50px", height: "50px", objectFit: "cover", cursor: "pointer" }}
                     className="rounded"
                     title={`לחץ לצפייה בפרטי ${product.name}`}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/50x50?text=תמונה";
+                    }}
                   />
                 </Link>
               </td>
@@ -225,9 +280,11 @@ const Products: FunctionComponent<ProductsProps> = () => {
               <td>
                 <span className="badge bg-info">{product.category}</span>
               </td>
-              <td className="text-success fw-bold">{product.price}₪</td>
+              <td className="text-success fw-bold">₪{product.price.toLocaleString()}</td>
               <td>
-                <small>{product.description.substring(0, 50)}...</small>
+                <small title={product.description}>
+                  {product.description.substring(0, 50)}...
+                </small>
               </td>
               <td>
                 <div className="d-flex gap-1 flex-wrap">
@@ -243,19 +300,15 @@ const Products: FunctionComponent<ProductsProps> = () => {
                   {/* כפתור הוספה לעגלה */}
                   <button
                     className="btn btn-sm btn-primary"
-                    onClick={() => {
-                      addToCart(product._id as string)
-                        .then(() => {
-                          alert("המוצר נוסף לעגלה בהצלחה");
-                        })
-                        .catch(() => {
-                          alert("שגיאה בהוספת המוצר לעגלה");
-                        });
-                    }}
+                    onClick={() => handleAddToCart(product)}
                     title="הוסף לעגלה"
-                    disabled={!product.available}
+                    disabled={!product.available || cartLoading}
                   >
-                    <i className="fa fa-cart-plus"></i>
+                    {cartLoading ? (
+                      <span className="spinner-border spinner-border-sm"></span>
+                    ) : (
+                      <i className="fa fa-cart-plus"></i>
+                    )}
                   </button>
                   
                   {/* כפתור מועדפים */}

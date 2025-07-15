@@ -4,8 +4,6 @@ const Joi = require("joi");
 const Product = require("../models/Product");
 const router = express.Router();
 
-
-
 const productsSchema = Joi.object({
   _id: Joi.string(),
   name: Joi.string().required().min(2),
@@ -18,7 +16,7 @@ const productsSchema = Joi.object({
   __v: Joi.number(),
 });
 
-// add product
+// Add new product - Admin only
 router.post("/", auth, async (req, res) => {
   try {
     // 1. check if user is an admin
@@ -41,8 +39,7 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-
-//get all products
+// Get all products - For authenticated users
 router.get("/", auth, async (req, res) => {
   try {
     const products = await Product.find();
@@ -52,6 +49,7 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+// Get specific product by ID - For authenticated users
 router.get("/:productId", auth, async (req, res) => {
   try {
     // check if product exists
@@ -63,12 +61,15 @@ router.get("/:productId", auth, async (req, res) => {
   }
 });
 
+// PUT - Full product update with complete validation
+// Used for complete product edits in UpdateProduct.tsx
+// Requires all fields to be validated against schema
 router.put("/:productId", auth, async (req, res) => {
   try {
     // check if user is an admin
     if (!req.payload.isAdmin) return res.status(400).send("Access denied");
 
-    // body validation
+    // body validation - validates all required fields
     const { error } = productsSchema.validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -84,6 +85,7 @@ router.put("/:productId", auth, async (req, res) => {
   }
 });
 
+// DELETE - Remove product completely from database
 router.delete("/:productId", auth, async (req, res) => {
   try {
     // check if user is an admin
@@ -96,10 +98,15 @@ router.delete("/:productId", auth, async (req, res) => {
   }
 });
 
+// PATCH - Partial product update without validation
+// Used for soft delete (setting available: false) in DeleteProductModal.tsx
+// Allows updating specific fields without validating the entire object
 router.patch("/:productId", auth, async (req, res) => {
   try {
     // check if user is an admin
     if (!req.payload.isAdmin) return res.status(400).send("Access denied");
+    
+    // No validation - allows partial updates of any field
     const product = await Product.findByIdAndUpdate(
       req.params.productId,
       req.body

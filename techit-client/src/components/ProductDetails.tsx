@@ -1,11 +1,13 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 import Layout from "./Layout";
 import { Product } from "../interfaces/Product";
 import { getProductById } from "../services/productsService";
-import { addToCart } from "../services/cartsService";
 import FavoriteButton from "./FavoriteButton";
 import { getPayloadFromToken } from "../services/usersService";
+import { useCart } from "../hooks/redux";
+import { addToCartAsync, addToCartLocal, fetchCartItems } from "../store/cartSlice";
 
 interface ProductDetailsProps {}
 
@@ -16,7 +18,9 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [addingToCart, setAddingToCart] = useState(false);
+
+  // Redux cart hook
+  const { dispatch, loading: cartLoading } = useCart();
 
   useEffect(() => {
     // בדיקה אם מנהל
@@ -57,19 +61,39 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
   const handleAddToCart = async () => {
     if (!product) return;
     
+    if (!product.available) {
+      toast.error("המוצר אינו זמין כעת");
+      return;
+    }
+
     try {
-      setAddingToCart(true);
-      await addToCart(product._id as string);
-      alert(`${product.name} נוסף לעגלה בהצלחה!`);
+      // הוסף לעגלה במצב לוקלי מיידית לUX טוב
+      dispatch(addToCartLocal(product));
+      toast.success(`${product.name} נוסף לעגלה!`);
+
+      // שלח לשרת ברקע
+      await dispatch(addToCartAsync(product._id as string)).unwrap();
+      
+      // רענן את העגלה מהשרת
+      dispatch(fetchCartItems());
     } catch (error: any) {
-      alert("שגיאה בהוספה לעגלה");
-    } finally {
-      setAddingToCart(false);
+      // אם השרת נכשל, הצג הודעת שגיאה
+      toast.error(error || "שגיאה בהוספה לעגלה");
     }
   };
 
   const handleBackToProducts = () => {
     navigate("/products");
+  };
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+    
+    // הוסף לעגלה ועבור לעמוד עגלת הקניות
+    await handleAddToCart();
+    setTimeout(() => {
+      navigate("/cart");
+    }, 500); // המתן קצת כדי שההודעה תופיע
   };
 
   if (loading) {
@@ -103,39 +127,58 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
 
   return (
     <Layout title={product.name}>
-      {/* כפתור חזרה */}
-      <div className="mb-4">
-        <button className="btn btn-outline-secondary" onClick={handleBackToProducts}>
-          <i className="fas fa-arrow-right me-2"></i>
-          חזור לרשימת המוצרים
-        </button>
-      </div>
+      {/* Breadcrumb */}
+      <nav aria-label="breadcrumb" className="mb-4">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <button className="btn btn-link p-0 text-decoration-none" onClick={handleBackToProducts}>
+              מוצרים
+            </button>
+          </li>
+          <li className="breadcrumb-item">
+            <span className="text-muted">{product.category}</span>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
 
       <div className="row">
         {/* תמונת המוצר */}
         <div className="col-lg-6 mb-4">
-          <div className="card">
-            <img
-              src={product.image}
-              className="card-img-top"
-              alt={`תמונה של ${product.name}`}
-              style={{ height: "400px", objectFit: "cover" }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x300?text=תמונה+לא+זמינה";
-              }}
-            />
-            {!product.available && (
-              <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                   style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-                <span className="badge bg-danger fs-4">אזל מהמלאי</span>
+          <div className="card shadow-sm">
+            <div className="position-relative">
+              <img
+                src={product.image}
+                className="card-img-top"
+                alt={`תמונה של ${product.name}`}
+                style={{ height: "450px", objectFit: "cover" }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/450x450?text=תמונה+לא+זמינה";
+                }}
+              />
+              {!product.available && (
+                <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                     style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
+                  <span className="badge bg-danger fs-4 p-3">אזל מהמלאי</span>
+                </div>
+              )}
+              
+              {/* Badge for available status */}
+              <div className="position-absolute top-0 end-0 m-3">
+                <span className={`badge fs-6 p-2 ${product.available ? "bg-success" : "bg-danger"}`}>
+                  <i className={`fas ${product.available ? "fa-check-circle" : "fa-times-circle"} me-1`}></i>
+                  {product.available ? "זמין במלאי" : "אזל מהמלאי"}
+                </span>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
         {/* פרטי המוצר */}
         <div className="col-lg-6">
-          <div className="card">
+          <div className="card shadow-sm">
             <div className="card-header bg-info text-white">
               <h5 className="mb-0">
                 <i className="fas fa-info-circle me-2"></i>
@@ -144,82 +187,98 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
             </div>
             <div className="card-body">
               {/* שם המוצר */}
-              <h2 className="card-title text-primary mb-3">{product.name}</h2>
+              <h1 className="card-title text-primary mb-3 display-6">{product.name}</h1>
 
               {/* קטגוריה */}
               <div className="mb-3">
-                <span className="badge bg-info fs-6">
+                <span className="badge bg-info fs-6 p-2">
                   <i className="fas fa-tag me-1"></i>
                   {product.category}
                 </span>
               </div>
 
               {/* מחיר */}
-              <div className="mb-4">
-                <h3 className="text-success mb-0">
+              <div className="mb-4 p-3 bg-light rounded">
+                <h2 className="text-success mb-1 display-5">
                   <i className="fas fa-shekel-sign me-2"></i>
                   {product.price.toLocaleString()}
-                </h3>
-                <small className="text-muted">מחיר כולל מע"ם</small>
-              </div>
-
-              {/* זמינות */}
-              <div className="mb-4">
-                <h6>זמינות:</h6>
-                {product.available ? (
-                  <span className="badge bg-success fs-6">
-                    <i className="fas fa-check-circle me-1"></i>
-                    זמין במלאי
-                  </span>
-                ) : (
-                  <span className="badge bg-danger fs-6">
-                    <i className="fas fa-times-circle me-1"></i>
-                    אזל מהמלאי
-                  </span>
-                )}
+                </h2>
+                <small className="text-muted">מחיר כולל מע"ם | משלוח חינם</small>
               </div>
 
               {/* תיאור */}
               <div className="mb-4">
-                <h6>תיאור המוצר:</h6>
-                <p className="text-muted">{product.description}</p>
+                <h6 className="fw-bold mb-2">
+                  <i className="fas fa-align-right me-2 text-info"></i>
+                  תיאור המוצר:
+                </h6>
+                <p className="text-muted lh-lg">{product.description}</p>
               </div>
 
               {/* כמות במלאי (רק למנהלים) */}
               {isAdmin && (
-                <div className="mb-4">
-                  <h6>כמות במלאי:</h6>
-                  <span className="badge bg-secondary fs-6">
-                    {product.quantity || 0} יחידות
-                  </span>
+                <div className="mb-4 p-2 bg-warning bg-opacity-10 rounded">
+                  <h6 className="fw-bold mb-1">
+                    <i className="fas fa-boxes me-2 text-warning"></i>
+                    מידע מנהל:
+                  </h6>
+                  <small className="text-muted">
+                    כמות במלאי: <span className="fw-bold">{product.quantity || 0} יחידות</span>
+                  </small>
                 </div>
               )}
 
               {/* כפתורי פעולה */}
-              <div className="d-flex gap-2 flex-wrap">
+              <div className="d-grid gap-2">
+                {/* כפתור קנייה מהירה */}
                 <button
-                  className="btn btn-primary flex-grow-1"
-                  onClick={handleAddToCart}
-                  disabled={!product.available || addingToCart}
-                  style={{ minWidth: "150px" }}
+                  className="btn btn-success btn-lg py-3"
+                  onClick={handleBuyNow}
+                  disabled={!product.available || cartLoading}
                 >
-                  {addingToCart ? (
+                  {cartLoading ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2"></span>
-                      מוסיף...
+                      מעבד...
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-cart-plus me-2"></i>
-                      {product.available ? "הוסף לעגלה" : "אזל מהמלאי"}
+                      <i className="fas fa-bolt me-2"></i>
+                      קנה עכשיו
                     </>
                   )}
                 </button>
+                
+                <div className="row g-2">
+                  {/* כפתור הוספה לעגלה */}
+                  <div className="col-8">
+                    <button
+                      className="btn btn-primary w-100 py-2"
+                      onClick={handleAddToCart}
+                      disabled={!product.available || cartLoading}
+                    >
+                      {cartLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          מוסיף...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-cart-plus me-2"></i>
+                          {product.available ? "הוסף לעגלה" : "אזל מהמלאי"}
+                        </>
+                      )}
+                    </button>
+                  </div>
 
-                <FavoriteButton 
-                  productId={product._id as string}
-                  className="btn btn-outline-danger"
-                />
+                  {/* כפתור מועדפים */}
+                  <div className="col-4">
+                    <FavoriteButton 
+                      productId={product._id as string}
+                      className="btn btn-outline-danger w-100 py-2"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -227,42 +286,43 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
       </div>
 
       {/* מידע נוסף */}
-      <div className="row mt-4">
+      <div className="row mt-5">
         <div className="col-12">
-          <div className="card">
+          <div className="card shadow-sm">
             <div className="card-header">
               <h5 className="mb-0">
-                <i className="fas fa-info-circle me-2"></i>
-                מידע נוסף
+                <i className="fas fa-gift me-2"></i>
+                יתרונות הקנייה אצלנו
               </h5>
             </div>
             <div className="card-body">
-              <div className="row">
-                <div className="col-md-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <i className="fas fa-truck text-info me-2"></i>
-                    <div>
-                      <h6 className="mb-0">משלוח חינם</h6>
-                      <small className="text-muted">לכל הארץ</small>
-                    </div>
+              <div className="row text-center">
+                <div className="col-md-3 mb-3">
+                  <div className="d-flex flex-column align-items-center">
+                    <i className="fas fa-truck fa-2x text-info mb-2"></i>
+                    <h6 className="fw-bold">משלוח חינם</h6>
+                    <small className="text-muted">לכל הארץ</small>
                   </div>
                 </div>
-                <div className="col-md-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <i className="fas fa-shield-alt text-success me-2"></i>
-                    <div>
-                      <h6 className="mb-0">אחריות יצרן</h6>
-                      <small className="text-muted">2 שנים</small>
-                    </div>
+                <div className="col-md-3 mb-3">
+                  <div className="d-flex flex-column align-items-center">
+                    <i className="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                    <h6 className="fw-bold">אחריות יצרן</h6>
+                    <small className="text-muted">2 שנים מלאות</small>
                   </div>
                 </div>
-                <div className="col-md-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <i className="fas fa-undo text-warning me-2"></i>
-                    <div>
-                      <h6 className="mb-0">החזרה</h6>
-                      <small className="text-muted">30 יום</small>
-                    </div>
+                <div className="col-md-3 mb-3">
+                  <div className="d-flex flex-column align-items-center">
+                    <i className="fas fa-undo fa-2x text-warning mb-2"></i>
+                    <h6 className="fw-bold">החזרה</h6>
+                    <small className="text-muted">30 יום</small>
+                  </div>
+                </div>
+                <div className="col-md-3 mb-3">
+                  <div className="d-flex flex-column align-items-center">
+                    <i className="fas fa-headset fa-2x text-primary mb-2"></i>
+                    <h6 className="fw-bold">תמיכה</h6>
+                    <small className="text-muted">24/7</small>
                   </div>
                 </div>
               </div>
@@ -271,32 +331,95 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
         </div>
       </div>
 
-      {/* המלצות (מדומה) */}
+      {/* המלצות למוצרים דומים */}
       <div className="row mt-4">
         <div className="col-12">
-          <div className="card">
+          <div className="card shadow-sm">
             <div className="card-header">
               <h5 className="mb-0">
                 <i className="fas fa-star text-warning me-2"></i>
-                מוצרים דומים
+                מוצרים דומים שעשויים לעניין אותך
               </h5>
             </div>
             <div className="card-body">
-              <p className="text-muted mb-0">
-                <i className="fas fa-lightbulb me-2"></i>
-                רוצה לראות מוצרים דומים? עבור ל
-                <button 
-                  className="btn btn-link p-0 mx-2"
-                  onClick={handleBackToProducts}
-                >
-                  רשימת המוצרים
-                </button>
-                וסנן לפי קטגוריה "{product.category}"
-              </p>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="text-muted mb-2">
+                    <i className="fas fa-lightbulb me-2"></i>
+                    רוצה לראות מוצרים דומים בקטגוריה "{product.category}"?
+                  </p>
+                  <button 
+                    className="btn btn-outline-info"
+                    onClick={() => navigate(`/products?category=${encodeURIComponent(product.category)}`)}
+                  >
+                    <i className="fas fa-search me-2"></i>
+                    צפה במוצרים דומים
+                  </button>
+                </div>
+                <div className="text-center">
+                  <i className="fas fa-boxes fa-3x text-muted opacity-50"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* כפתור חזרה קבוע */}
+      <div className="fixed-bottom p-3 d-block d-md-none">
+        <button 
+          className="btn btn-secondary w-100" 
+          onClick={handleBackToProducts}
+        >
+          <i className="fas fa-arrow-right me-2"></i>
+          חזור לרשימת המוצרים
+        </button>
+      </div>
+
+      {/* Custom CSS for this component */}
+      <style>{`
+        .breadcrumb-item + .breadcrumb-item::before {
+          content: "←";
+          color: #6c757d;
+        }
+        
+        .display-6 {
+          font-size: 2rem;
+          font-weight: 600;
+        }
+        
+        .display-5 {
+          font-size: 2.5rem;
+          font-weight: 700;
+        }
+        
+        @media (max-width: 768px) {
+          .display-6 {
+            font-size: 1.5rem;
+          }
+          
+          .display-5 {
+            font-size: 2rem;
+          }
+          
+          .card-img-top {
+            height: 300px !important;
+          }
+        }
+        
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        .card {
+          transition: transform 0.2s ease-in-out;
+        }
+        
+        .card:hover {
+          transform: translateY(-2px);
+        }
+      `}</style>
     </Layout>
   );
 };

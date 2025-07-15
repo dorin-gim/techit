@@ -1,5 +1,6 @@
 import { FunctionComponent } from "react";
 import { NavigateFunction, NavLink, useNavigate } from "react-router-dom";
+import CartIcon from "./CartIcon";
 
 interface NavbarProps {}
 
@@ -47,10 +48,7 @@ const Navbar: FunctionComponent<NavbarProps> = () => {
                 </NavLink>
               </li>
               <li className="nav-item">
-                <NavLink className="nav-link" aria-current="page" to="/cart">
-                  <i className="fas fa-shopping-cart me-1"></i>
-                  עגלה
-                </NavLink>
+                <CartIcon />
               </li>
               <li className="nav-item">
                 <NavLink className="nav-link" aria-current="page" to="/favorites">
