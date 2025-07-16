@@ -20,7 +20,7 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
-    // בדיקה שהמשתמש הוא אדמין
+    // Check if user is admin
     try {
       const payload = getPayloadFromToken();
       if (!payload.isAdmin) {
@@ -41,11 +41,8 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
     try {
       setLoading(true);
       const response = await getFavoritesStats();
-      console.log("Stats response:", response); // לבדיקה
       setStats(response || []);
     } catch (error: any) {
-      console.error("Error loading favorites stats:", error);
-      console.error("Error details:", error.response?.data);
       toast.error(
         "שגיאה בטעינת סטטיסטיקות המועדפים: " +
           (error.response?.data || error.message)
@@ -133,7 +130,7 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
 
   return (
     <Layout title="סטטיסטיקות מועדפים">
-      {/* כרטיסי סיכום */}
+      {/* Summary cards */}
       <div className="row mb-4">
         <div className="col-md-4">
           <div className="card bg-primary text-white">
@@ -188,7 +185,7 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
         </div>
       </div>
 
-      {/* טבלת סטטיסטיקות */}
+      {/* Statistics table */}
       <div className="card shadow-sm">
         <div className="card-header bg-info text-white">
           <h5 className="mb-0">
@@ -289,7 +286,7 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
         </div>
       </div>
 
-      {/* הסבר */}
+      {/* Explanation */}
       <div className="card mt-4">
         <div className="card-header">
           <h6 className="mb-0">

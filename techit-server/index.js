@@ -6,7 +6,7 @@ const users = require("./routes/users");
 const products = require("./routes/products");
 const carts = require("./routes/carts");
 const favorites = require("./routes/favorites");
-// הוסף את השורה הזו
+// Import rate limiters
 const { generalLimiter, dailyUserLimiter } = require("./middlewares/rateLimiter");
 require("dotenv").config();
 
@@ -45,7 +45,7 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
-// Rate limiting middlewares - הוסף את השורות הבאות
+// Rate limiting middlewares
 app.use(generalLimiter);
 app.use(dailyUserLimiter);
 

@@ -15,13 +15,9 @@ const favoriteSchema = Joi.object({
 // Get all user favorites with product details
 router.get("/", auth, async (req, res) => {
   try {
-    console.log("Getting favorites for user:", req.payload._id);
-    
     const favorites = await Favorite.find({ 
       userId: new mongoose.Types.ObjectId(req.payload._id) 
     });
-    
-    console.log("Found favorites:", favorites.length);
     
     // Get product details for each favorite
     const productPromises = favorites.map(fav => 
@@ -35,10 +31,8 @@ router.get("/", auth, async (req, res) => {
       .filter(product => product !== null)
       .map(product => product.toObject());
     
-    console.log("Valid products:", validProducts.length);
     res.status(200).send(validProducts);
   } catch (error) {
-    console.error("Error fetching favorites:", error);
     res.status(400).send("שגיאה בטעינת המועדפים");
   }
 });
@@ -46,8 +40,6 @@ router.get("/", auth, async (req, res) => {
 // Add product to favorites
 router.post("/", auth, async (req, res) => {
   try {
-    console.log("Adding to favorites - User:", req.payload._id, "Product:", req.body.productId);
-    
     // Validate request body
     const { error } = favoriteSchema.validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -77,10 +69,8 @@ router.post("/", auth, async (req, res) => {
     });
     
     await favorite.save();
-    console.log("Favorite saved successfully:", favorite);
     res.status(201).send("המוצר נוסף למועדפים בהצלחה");
   } catch (error) {
-    console.error("Error adding to favorites:", error);
     res.status(400).send("שגיאה בהוספה למועדפים");
   }
 });
@@ -103,7 +93,6 @@ router.delete("/:productId", auth, async (req, res) => {
 
     res.status(200).send("המוצר הוסר מהמועדפים בהצלחה");
   } catch (error) {
-    console.error("Error removing from favorites:", error);
     res.status(400).send("שגיאה בהסרה מהמועדפים");
   }
 });
@@ -122,7 +111,6 @@ router.get("/check/:productId", auth, async (req, res) => {
 
     res.status(200).send({ isFavorite: !!favorite });
   } catch (error) {
-    console.error("Error checking favorite:", error);
     res.status(400).send("שגיאה בבדיקת מועדפים");
   }
 });
@@ -130,25 +118,18 @@ router.get("/check/:productId", auth, async (req, res) => {
 // Get favorites statistics for admin
 router.get("/stats", auth, adminLimiter, async (req, res) => {
   try {
-    console.log("Stats route called by user:", req.payload._id, "isAdmin:", req.payload.isAdmin);
-    
     if (!req.payload.isAdmin) {
       return res.status(403).send("אין הרשאה לצפייה בנתונים");
     }
 
-    // בדיקה פשוטה קודם
+    // Check if there are any favorites
     const favoritesCount = await Favorite.countDocuments();
-    console.log("Total favorites in DB:", favoritesCount);
     
     if (favoritesCount === 0) {
       return res.status(200).send([]);
     }
 
-    // בדיקה מפורטת של המסמכים
-    const allFavorites = await Favorite.find().limit(5);
-    console.log("Sample favorites:", allFavorites);
-
-    // Aggregation pipeline מעודכן
+    // Aggregation pipeline for favorites statistics
     const pipeline = [
       {
         $group: {
@@ -158,7 +139,7 @@ router.get("/stats", auth, adminLimiter, async (req, res) => {
       },
       {
         $lookup: {
-          from: "products", // שם הקולקשן במונגו
+          from: "products", // MongoDB collection name
           localField: "_id",
           foreignField: "_id",
           as: "product"
@@ -167,7 +148,7 @@ router.get("/stats", auth, adminLimiter, async (req, res) => {
       {
         $unwind: {
           path: "$product",
-          preserveNullAndEmptyArrays: false // מסנן מוצרים שנמחקו
+          preserveNullAndEmptyArrays: false // Filter out deleted products
         }
       },
       {
@@ -183,14 +164,9 @@ router.get("/stats", auth, adminLimiter, async (req, res) => {
       }
     ];
 
-    console.log("Running aggregation pipeline...");
     const stats = await Favorite.aggregate(pipeline);
-    console.log("Aggregation result:", JSON.stringify(stats, null, 2));
-    
     res.status(200).send(stats);
   } catch (error) {
-    console.error("Error fetching favorites stats:", error);
-    console.error("Stack trace:", error.stack);
     res.status(400).send("שגיאה בטעינת סטטיסטיקות: " + error.message);
   }
 });

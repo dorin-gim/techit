@@ -59,7 +59,6 @@ router.patch("/", auth, async (req, res) => {
     
     res.status(200).send("Product has been added to cart");
   } catch (error) {
-    console.error("Error adding to cart:", error);
     res.status(400).send("Error adding product to cart");
   }
 });
@@ -67,7 +66,7 @@ router.patch("/", auth, async (req, res) => {
 // Get cart items with product details - GET request
 router.get("/", auth, async (req, res) => {
   try {
-    // get user cart
+    // Get user cart
     const cart = await Cart.findOne({ 
       userId: new mongoose.Types.ObjectId(req.payload._id), 
       active: true 
@@ -77,15 +76,15 @@ router.get("/", auth, async (req, res) => {
       return res.status(200).send([]);
     }
     
-    // create array of promises to get product details
+    // Create array of promises to get product details
     let promises = cart.products.map((p) => Product.findById(p.productId));
     
-    // get all product details
+    // Get all product details
     let products = await Promise.all(promises);
     
     if (!products) return res.status(400).send("Error in products");
     
-    // combine cart info with product details
+    // Combine cart info with product details
     let cartItems = [];
     for (let i = 0; i < products.length; i++) {
       if (products[i]) {
@@ -99,7 +98,6 @@ router.get("/", auth, async (req, res) => {
     
     res.status(200).send(cartItems);
   } catch (error) {
-    console.error("Error fetching cart:", error);
     res.status(400).send("Error fetching cart");
   }
 });
@@ -127,7 +125,6 @@ router.delete("/:productId", auth, async (req, res) => {
     
     res.status(200).send("Product removed from cart successfully");
   } catch (error) {
-    console.error("Error removing product from cart:", error);
     res.status(400).send("Error removing product from cart");
   }
 });
@@ -148,7 +145,6 @@ router.delete("/", auth, async (req, res) => {
     
     res.status(200).send("Cart cleared successfully");
   } catch (error) {
-    console.error("Error clearing cart:", error);
     res.status(400).send("Error clearing cart");
   }
 });
@@ -193,7 +189,6 @@ router.put("/:productId", auth, async (req, res) => {
     
     res.status(200).send("Cart updated successfully");
   } catch (error) {
-    console.error("Error updating cart:", error);
     res.status(400).send("Error updating cart");
   }
 });
@@ -224,7 +219,6 @@ router.get("/summary", auth, async (req, res) => {
     
     res.status(200).send({ totalItems, totalPrice });
   } catch (error) {
-    console.error("Error getting cart summary:", error);
     res.status(400).send("Error getting cart summary");
   }
 });

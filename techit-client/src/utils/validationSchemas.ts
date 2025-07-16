@@ -1,13 +1,13 @@
 import * as yup from "yup";
 
-// Regex לסיסמה חזקה לפי הדרישות:
-// לפחות אות אחת גדולה, אות אחת קטנה, 4 מספרים, סימן מיוחד, מינימום 8 תווים
+// Strong password regex according to requirements:
+// At least one uppercase letter, one lowercase letter, 4 digits, special character, minimum 8 characters
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*\d.*\d.*\d)(?=.*[!@%$#^&*\-_*]).{8,}$/;
 
-// Regex לבדיקת אימייל מתקדמת
+// Advanced email validation regex
 const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
-// Regex לבדיקת שם (אותיות עבריות ואנגליות, רווחים, מקפים)
+// Name validation regex (Hebrew and English letters, spaces, hyphens)
 const nameRegex = /^[\u0590-\u05FFa-zA-Z\s\-']{2,50}$/;
 
 export const loginSchema = yup.object({
@@ -53,7 +53,7 @@ export const registerSchema = yup.object({
       if (!value) return true;
       const domain = value.split('@')[1];
       if (!domain) return false;
-      // בדיקה בסיסית לדומיין
+     // Basic domain validation
       return domain.includes('.') && domain.length > 3;
     }),
   
@@ -133,7 +133,7 @@ export const productSchema = yup.object({
       const hasImageExtension = imageExtensions.some(ext => 
         value.toLowerCase().includes(ext)
       );
-      // אם אין סיומת תמונה, בודק אם זה URL של שירות תמונות
+          // If no image extension, check if it's an image service URL
       const imageServices = ['imgur', 'cloudinary', 'unsplash', 'pixabay', 'pexels'];
       const isImageService = imageServices.some(service => 
         value.toLowerCase().includes(service)
@@ -142,7 +142,7 @@ export const productSchema = yup.object({
     }),
 });
 
-// סכמה לעדכון פרופיל
+// Schema for profile update
 export const profileUpdateSchema = yup.object({
   name: yup
     .string()
@@ -158,7 +158,7 @@ export const profileUpdateSchema = yup.object({
     .max(100, "כתובת האימייל ארוכה מדי (מקסימום 100 תווים)"),
 });
 
-// סכמה לשינוי סיסמה
+// Schema for password change
 export const changePasswordSchema = yup.object({
   currentPassword: yup
     .string()
@@ -183,7 +183,7 @@ export const changePasswordSchema = yup.object({
     .oneOf([yup.ref('newPassword')], 'אישור הסיסמה אינו תואם לסיסמה החדשה'),
 });
 
-// סכמה לחיפוש
+// Schema for search
 export const searchSchema = yup.object({
   query: yup
     .string()
@@ -194,7 +194,7 @@ export const searchSchema = yup.object({
     }),
 });
 
-// פונקציות עזר לבדיקת חוזק סיסמה
+// Password strength checking utility functions
 export const getPasswordStrength = (password: string) => {
   const requirements = {
     length: password.length >= 8,
@@ -236,17 +236,17 @@ export const getPasswordStrength = (password: string) => {
   };
 };
 
-// פונקציה לבדיקת תקינות אימייל
+//Email validation function
 export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-// פונקציה לבדיקת תקינות שם
+// Name validity check function
 export const validateName = (name: string): boolean => {
   return nameRegex.test(name) && !/\d/.test(name);
 };
 
-// פונקציה לניקוי וטיפול בשגיאות
+// Cleanup and error handling function
 export const getErrorMessage = (error: any): string => {
   if (typeof error === 'string') {
     return error;
