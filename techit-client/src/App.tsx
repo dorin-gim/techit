@@ -6,6 +6,9 @@ import store from './store/store';
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
 
+// הוסף את השורה הזו
+import autoLogoutService from './services/autoLogoutService';
+
 import Login from "./components/Login";
 import Home from "./components/Home";
 import Register from "./components/Register";
@@ -16,23 +19,30 @@ import ProductDetails from "./components/ProductDetails";
 import Cart from "./components/Cart";
 import About from "./components/About";
 import Favorites from "./components/Favorites";
+// הוסף את השורות הבאות
+import UsersManagement from "./components/UsersManagement";
+import FavoritesStats from "./components/FavoritesStats";
 
 function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>();
   
   useEffect(() => {
-    // בדיקת הרשאות משתמש בעת טעינת האפליקציה
     try {
       if (localStorage.getItem("token")) {
-        // ניתן להוסיף כאן לוגיקה נוספת
+        // Auto logout service מתחיל אוטומטית
       }
     } catch (error) {
-      // טיפול שקט בשגיאות
       localStorage.removeItem("token");
     }
   }, []);
 
-  // Set the main content ID for accessibility
+  // הוסף cleanup כשהאפליקציה נסגרת
+  useEffect(() => {
+    return () => {
+      autoLogoutService.cleanup();
+    };
+  }, []);
+
   useEffect(() => {
     document.body.setAttribute('dir', 'rtl');
     document.body.setAttribute('lang', 'he');
@@ -53,12 +63,14 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/about" element={<About />} />
+              {/* הוסף את הנתיבים החדשים */}
+              <Route path="/admin/users" element={<UsersManagement />} />
+              <Route path="/admin/favorites-stats" element={<FavoritesStats />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </main>
         </Router>
         
-        {/* Toast notifications with accessibility */}
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -75,7 +87,6 @@ function App() {
           aria-label="הודעות מערכת"
         />
         
-        {/* Live region for dynamic content announcements */}
         <div 
           id="live-region" 
           aria-live="polite" 

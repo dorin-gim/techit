@@ -28,7 +28,7 @@ export function checkIfFavorite(productId: string) {
   return axios.get(`${api}/check/${productId}`, getAuthHeaders()).then(res => res.data.isFavorite);
 }
 
-// Get favorites statistics (for admins)
+// Get favorites statistics (admin only) - הוספה חדשה
 export function getFavoritesStats() {
   return axios.get(`${api}/stats`, getAuthHeaders()).then(res => res.data);
 }

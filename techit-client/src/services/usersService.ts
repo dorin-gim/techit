@@ -29,22 +29,36 @@ export function getPayloadFromToken() {
   return jwtDecode<TokenPayload>(token);
 }
 
+// הוסף את הפונקציות החדשות:
+
+// Get all users (admin only)
+export function getAllUsers() {
+  return axios.get(`${api}/all`, {
+    headers: {
+      Authorization: JSON.parse(localStorage.getItem("token") as string),
+    },
+  });
+}
+
+// Update user role (admin only)
+export function updateUserRole(userId: string, isAdmin: boolean) {
+  return axios.patch(`${api}/${userId}/role`, { isAdmin }, {
+    headers: {
+      Authorization: JSON.parse(localStorage.getItem("token") as string),
+    },
+  });
+}
+
+// Delete user (admin only)
+export function deleteUser(userId: string) {
+  return axios.delete(`${api}/${userId}`, {
+    headers: {
+      Authorization: JSON.parse(localStorage.getItem("token") as string),
+    },
+  });
+}
+
 interface TokenPayload {
   _id: string;
   isAdmin: boolean;
 }
-
-// export async function checkIfAdmin() {
-//   try {
-//     // 1. check if user already logged in
-//     if (localStorage.getItem("userId") != null) {
-//       let user = await getUserById();
-//       console.log(user.data.isAdmin);
-//       // 2. check if admin
-//       return user.data.isAdmin;
-//     }
-//     return false;
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }

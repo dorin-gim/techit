@@ -6,6 +6,8 @@ const users = require("./routes/users");
 const products = require("./routes/products");
 const carts = require("./routes/carts");
 const favorites = require("./routes/favorites");
+// הוסף את השורה הזו
+const { generalLimiter, dailyUserLimiter } = require("./middlewares/rateLimiter");
 require("dotenv").config();
 
 const app = express();
@@ -20,7 +22,6 @@ const customLogger = (req, res, next) => {
   
   console.log(`[${timestamp}] ${method} ${url} - IP: ${ip}`);
   
-  // Log response time
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
@@ -32,7 +33,6 @@ const customLogger = (req, res, next) => {
   next();
 };
 
-// MongoDB connection
 mongoose
   .connect(process.env.DB)
   .then(() => console.log("✅ MongoDB connected successfully"))
@@ -45,7 +45,10 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
-// Logger middleware (use Morgan in production, custom in development)
+// Rate limiting middlewares - הוסף את השורות הבאות
+app.use(generalLimiter);
+app.use(dailyUserLimiter);
+
 if (process.env.NODE_ENV === 'production') {
   app.use(morgan('combined'));
 } else {
@@ -58,7 +61,6 @@ app.use("/api/products", products);
 app.use("/api/carts", carts);
 app.use("/api/favorites", favorites);
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
@@ -68,12 +70,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Global error handler
 app.use((err, req, res, next) => {
   console.error('❌ Server Error:', err);
   res.status(500).json({ error: 'Internal server error' });

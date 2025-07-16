@@ -2,6 +2,7 @@ const express = require("express");
 const Favorite = require("../models/Favorite");
 const Product = require("../models/Product");
 const auth = require("../middlewares/auth");
+const { adminLimiter } = require("../middlewares/rateLimiter");
 const Joi = require("joi");
 const router = express.Router();
 
@@ -104,49 +105,59 @@ router.get("/check/:productId", auth, async (req, res) => {
 });
 
 // Get favorites count for admin (bonus feature)
-router.get("/stats", auth, async (req, res) => {
-  try {
-    // Check if user is admin
-    if (!req.payload.isAdmin) {
-      return res.status(403).send("אין הרשאה לצפייה בנתונים");
-    }
-
-    const pipeline = [
-      {
-        $group: {
-          _id: "$productId",
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      {
-        $unwind: "$product"
-      },
-      {
-        $project: {
-          productName: "$product.name",
-          productCategory: "$product.category",
-          favoriteCount: "$count"
-        }
-      },
-      {
-        $sort: { favoriteCount: -1 }
+router.get("/stats", auth, adminLimiter, async (req, res) => {
+    try {
+      console.log("Stats route called by user:", req.payload._id, "isAdmin:", req.payload.isAdmin);
+      
+      if (!req.payload.isAdmin) {
+        return res.status(403).send("אין הרשאה לצפייה בנתונים");
       }
-    ];
-
-    const stats = await Favorite.aggregate(pipeline);
-    res.status(200).send(stats);
-  } catch (error) {
-    console.error("Error fetching favorites stats:", error);
-    res.status(400).send("שגיאה בטעינת סטטיסטיקות");
-  }
-});
+  
+      // בדיקה פשוטה קודם
+      const favoritesCount = await Favorite.countDocuments();
+      console.log("Total favorites in DB:", favoritesCount);
+      
+      if (favoritesCount === 0) {
+        return res.status(200).send([]);
+      }
+  
+      const pipeline = [
+        {
+          $group: {
+            _id: "$productId",
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "product"
+          }
+        },
+        {
+          $unwind: "$product"
+        },
+        {
+          $project: {
+            productName: "$product.name",
+            productCategory: "$product.category",
+            favoriteCount: "$count"
+          }
+        },
+        {
+          $sort: { favoriteCount: -1 }
+        }
+      ];
+  
+      const stats = await Favorite.aggregate(pipeline);
+      console.log("Aggregation result:", stats);
+      res.status(200).send(stats);
+    } catch (error) {
+      console.error("Error fetching favorites stats:", error);
+      res.status(400).send("שגיאה בטעינת סטטיסטיקות: " + error.message);
+    }
+  });
 
 module.exports = router;

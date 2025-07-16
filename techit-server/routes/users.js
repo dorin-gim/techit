@@ -4,7 +4,9 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Cart = require("../models/Cart");
+const Favorite = require("../models/Favorite");
 const auth = require("../middlewares/auth");
+const { loginLimiter, adminLimiter } = require("../middlewares/rateLimiter");
 const _ = require("lodash");
 const router = express.Router();
 
@@ -52,8 +54,8 @@ const loginSchema = Joi.object({
   password: Joi.string().required().min(8),
 });
 
-// login
-router.post("/login", async (req, res) => {
+// login - עם rate limiting
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     // 1. body validation
     const { error } = loginSchema.validate(req.body);
@@ -86,6 +88,89 @@ router.get("/profile", auth, async (req, res) => {
     res.status(200).send(_.pick(user, ["_id", "email", "name", "isAdmin"]));
   } catch (error) {
     res.status(400).send(error);
+  }
+});
+
+// Get all users (admin only)
+router.get("/all", auth, adminLimiter, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.payload.isAdmin) {
+      return res.status(403).send("אין הרשאה לצפייה במשתמשים");
+    }
+
+    const users = await User.find({}, { password: 0 }).sort({ name: 1 });
+    res.status(200).send(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(400).send("שגיאה בטעינת המשתמשים");
+  }
+});
+
+// Update user role (admin only)
+router.patch("/:userId/role", auth, adminLimiter, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.payload.isAdmin) {
+      return res.status(403).send("אין הרשאה לשינוי הרשאות");
+    }
+
+    // Validate request body
+    const { isAdmin } = req.body;
+    if (typeof isAdmin !== 'boolean') {
+      return res.status(400).send("סוג הרשאה לא תקין");
+    }
+
+    // Don't allow changing own role
+    if (req.params.userId === req.payload._id) {
+      return res.status(400).send("לא ניתן לשנות את ההרשאות של עצמך");
+    }
+
+    // Update user role
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { isAdmin },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).send("משתמש לא נמצא");
+    }
+
+    res.status(200).send("הרשאות המשתמש עודכנו בהצלחה");
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    res.status(400).send("שגיאה בעדכון הרשאות");
+  }
+});
+
+// Delete user (admin only)
+router.delete("/:userId", auth, adminLimiter, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.payload.isAdmin) {
+      return res.status(403).send("אין הרשאה למחיקת משתמשים");
+    }
+
+    // Don't allow deleting own account
+    if (req.params.userId === req.payload._id) {
+      return res.status(400).send("לא ניתן למחוק את עצמך");
+    }
+
+    // Delete user
+    const user = await User.findByIdAndDelete(req.params.userId);
+    if (!user) {
+      return res.status(404).send("משתמש לא נמצא");
+    }
+
+    // Also delete user's cart and favorites
+    await Cart.deleteMany({ userId: req.params.userId });
+    await Favorite.deleteMany({ userId: req.params.userId });
+
+    res.status(200).send("המשתמש נמחק בהצלחה");
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(400).send("שגיאה במחיקת המשתמש");
   }
 });
 

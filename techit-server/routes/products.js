@@ -1,5 +1,6 @@
 const express = require("express");
 const auth = require("../middlewares/auth");
+const { adminLimiter } = require("../middlewares/rateLimiter");
 const Joi = require("joi");
 const Product = require("../models/Product");
 const router = express.Router();
@@ -17,7 +18,7 @@ const productsSchema = Joi.object({
 });
 
 // Add new product - Admin only
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, adminLimiter, async (req, res) => {
   try {
     // 1. check if user is an admin
     if (!req.payload.isAdmin) return res.status(401).send("Access denied");
@@ -62,9 +63,7 @@ router.get("/:productId", auth, async (req, res) => {
 });
 
 // PUT - Full product update with complete validation
-// Used for complete product edits in UpdateProduct.tsx
-// Requires all fields to be validated against schema
-router.put("/:productId", auth, async (req, res) => {
+router.put("/:productId", auth, adminLimiter, async (req, res) => {
   try {
     // check if user is an admin
     if (!req.payload.isAdmin) return res.status(400).send("Access denied");
@@ -86,7 +85,7 @@ router.put("/:productId", auth, async (req, res) => {
 });
 
 // DELETE - Remove product completely from database
-router.delete("/:productId", auth, async (req, res) => {
+router.delete("/:productId", auth, adminLimiter, async (req, res) => {
   try {
     // check if user is an admin
     if (!req.payload.isAdmin) return res.status(400).send("Access denied");
@@ -99,9 +98,7 @@ router.delete("/:productId", auth, async (req, res) => {
 });
 
 // PATCH - Partial product update without validation
-// Used for soft delete (setting available: false) in DeleteProductModal.tsx
-// Allows updating specific fields without validating the entire object
-router.patch("/:productId", auth, async (req, res) => {
+router.patch("/:productId", auth, adminLimiter, async (req, res) => {
   try {
     // check if user is an admin
     if (!req.payload.isAdmin) return res.status(400).send("Access denied");
