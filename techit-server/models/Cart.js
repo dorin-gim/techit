@@ -2,15 +2,41 @@ const { Schema, model } = require("mongoose");
 
 const cartSchema = new Schema({
   userId: {
-    type: String,
+    type: Schema.Types.ObjectId, // שינוי מ-String ל-ObjectId
     required: true,
-    minlength: 2,
+    ref: 'User'
   },
-  products: [{ productId: String, quantity: Number }],
+  products: [{ 
+    productId: {
+      type: Schema.Types.ObjectId, // שינוי מ-String ל-ObjectId
+      ref: 'Product'
+    }, 
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 1
+    }
+  }],
   active: {
     type: Boolean,
     required: true,
+    default: true
   },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
+
+// Update the updatedAt field before saving
+cartSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
 const Cart = model("carts", cartSchema);
 module.exports = Cart;

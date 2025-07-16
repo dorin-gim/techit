@@ -2,14 +2,14 @@ const { Schema, model } = require("mongoose");
 
 const favoriteSchema = new Schema({
   userId: {
-    type: String,
+    type: Schema.Types.ObjectId, 
     required: true,
-    ref: 'users'
+    ref: 'User' 
   },
   productId: {
-    type: String,
+    type: Schema.Types.ObjectId, 
     required: true,
-    ref: 'products'
+    ref: 'Product' 
   },
   createdAt: {
     type: Date,
