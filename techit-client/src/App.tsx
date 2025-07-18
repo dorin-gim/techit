@@ -67,7 +67,6 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/about" element={<About />} />
-              {/* Admin routes */}
               <Route path="/admin/users" element={<UsersManagement />} />
               <Route
                 path="/admin/favorites-stats"

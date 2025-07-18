@@ -28,17 +28,20 @@ const Products: FunctionComponent<ProductsProps> = () => {
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [productId, setProductId] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Redux cart hook
   const { dispatch, loading: cartLoading } = useCart();
 
-  // קבלת קטגוריות ייחודיות
-  const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))];
+  // Get unique categories
+  const categories = [
+    "all",
+    ...Array.from(new Set(products.map((p) => p.category))),
+  ];
 
   useEffect(() => {
-    // בדיקה אם מנהל
+    // Check if user is admin
     if (localStorage.getItem("token") != null) {
       try {
         let payload = getPayloadFromToken();
@@ -51,16 +54,18 @@ const Products: FunctionComponent<ProductsProps> = () => {
 
   useEffect(() => {
     loadProducts();
-    // טען גם את עגלת הקניות
+    // Load shopping cart
     dispatch(fetchCartItems());
   }, [productsChanged, dispatch]);
 
   useEffect(() => {
-    // פילטור מוצרים לפי חיפוש וקטגוריה
-    let filtered = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+    // Filter products by search and category
+    let filtered = products.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" || product.category === selectedCategory;
       return matchesSearch && matchesCategory && product.available;
     });
     setFilteredProducts(filtered);
@@ -96,7 +101,7 @@ const Products: FunctionComponent<ProductsProps> = () => {
     setProductsChanged(!productsChanged);
   };
 
-  // פונקציה מעודכנת להוספה לעגלה עם Redux
+  // Updated function for adding to cart with Redux
   const handleAddToCart = async (product: Product) => {
     if (!product.available) {
       toast.error("המוצר אינו זמין כעת");
@@ -104,17 +109,16 @@ const Products: FunctionComponent<ProductsProps> = () => {
     }
 
     try {
-      // הוסף לעגלה במצב לוקלי מיידית לUX טוב
+      // Add to cart locally immediately for good UX
       dispatch(addToCartLocal(product));
       toast.success(`${product.name} נוסף לעגלה!`);
 
-      // שלח לשרת ברקע
+      // Send to server in background
       await dispatch(addToCartAsync(product._id as string)).unwrap();
-      
-      // רענן את העגלה מהשרת
+
+      // Refresh cart from server
       dispatch(fetchCartItems());
     } catch (error: any) {
-      // אם השרת נכשל, הצג הודעת שגיאה
       toast.error(error || "שגיאה בהוספה לעגלה");
     }
   };
@@ -126,51 +130,59 @@ const Products: FunctionComponent<ProductsProps> = () => {
           <div className="card h-100 shadow-sm product-card">
             <div className="card-header bg-info text-white d-flex justify-content-between align-items-center">
               <small>{product.category}</small>
-              <span className={`badge ${product.available ? "bg-success" : "bg-danger"}`}>
+              <span
+                className={`badge ${
+                  product.available ? "bg-success" : "bg-danger"
+                }`}
+              >
                 {product.available ? "זמין" : "אזל"}
               </span>
             </div>
-            
-            {/* תמונה עם קישור */}
-            <Link to={`/products/${product._id}`} className="text-decoration-none">
+
+            <Link
+              to={`/products/${product._id}`}
+              className="text-decoration-none"
+            >
               <img
                 src={product.image}
                 className="card-img-top"
                 alt={`תמונה של ${product.name}`}
                 title={`לחץ לצפייה בפרטי ${product.name}`}
-                style={{ height: "200px", objectFit: "cover", cursor: "pointer" }}
+                style={{
+                  height: "200px",
+                  objectFit: "cover",
+                  cursor: "pointer",
+                }}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x300?text=תמונה+לא+זמינה";
+                  (e.target as HTMLImageElement).src =
+                    "https://via.placeholder.com/400x300?text=תמונה+לא+זמינה";
                 }}
               />
             </Link>
-            
+
             <div className="card-body d-flex flex-column">
-              {/* שם המוצר עם קישור */}
               <h5 className="card-title">
-                <Link 
-                  to={`/products/${product._id}`} 
+                <Link
+                  to={`/products/${product._id}`}
                   className="text-decoration-none text-dark"
                   title={`צפה בפרטי ${product.name}`}
                 >
                   {product.name}
                 </Link>
               </h5>
-              
+
               <p className="card-text flex-grow-1 text-muted small">
-                {product.description.length > 100 
-                  ? `${product.description.substring(0, 100)}...` 
-                  : product.description
-                }
+                {product.description.length > 100
+                  ? `${product.description.substring(0, 100)}...`
+                  : product.description}
               </p>
-              
+
               <p className="card-text price-tag mb-3">
                 ₪{product.price.toLocaleString()}
               </p>
-              
+
               <div className="d-flex gap-2 flex-wrap mt-auto">
-                {/* כפתור פרטים */}
-                <Link 
+                <Link
                   to={`/products/${product._id}`}
                   className="btn btn-outline-info btn-sm"
                   title={`צפה בפרטי ${product.name}`}
@@ -178,8 +190,7 @@ const Products: FunctionComponent<ProductsProps> = () => {
                   <i className="fas fa-eye me-1"></i>
                   פרטים
                 </Link>
-                
-                {/* כפתור הוספה לעגלה */}
+
                 <button
                   className="btn btn-primary flex-grow-1"
                   onClick={() => handleAddToCart(product)}
@@ -198,14 +209,12 @@ const Products: FunctionComponent<ProductsProps> = () => {
                     </>
                   )}
                 </button>
-                
-                {/* כפתור מועדפים */}
-                <FavoriteButton 
+
+                <FavoriteButton
                   productId={product._id as string}
                   className="btn"
                 />
-                
-                {/* כפתורי מנהל */}
+
                 {isAdmin && (
                   <>
                     <button
@@ -259,18 +268,24 @@ const Products: FunctionComponent<ProductsProps> = () => {
                   <img
                     src={product.image}
                     alt={`תמונה של ${product.name}`}
-                    style={{ width: "50px", height: "50px", objectFit: "cover", cursor: "pointer" }}
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      objectFit: "cover",
+                      cursor: "pointer",
+                    }}
                     className="rounded"
                     title={`לחץ לצפייה בפרטי ${product.name}`}
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/50x50?text=תמונה";
+                      (e.target as HTMLImageElement).src =
+                        "https://via.placeholder.com/50x50?text=תמונה";
                     }}
                   />
                 </Link>
               </td>
               <td className="fw-bold">
-                <Link 
-                  to={`/products/${product._id}`} 
+                <Link
+                  to={`/products/${product._id}`}
                   className="text-decoration-none"
                   title={`צפה בפרטי ${product.name}`}
                 >
@@ -280,7 +295,9 @@ const Products: FunctionComponent<ProductsProps> = () => {
               <td>
                 <span className="badge bg-info">{product.category}</span>
               </td>
-              <td className="text-success fw-bold">₪{product.price.toLocaleString()}</td>
+              <td className="text-success fw-bold">
+                ₪{product.price.toLocaleString()}
+              </td>
               <td>
                 <small title={product.description}>
                   {product.description.substring(0, 50)}...
@@ -288,16 +305,14 @@ const Products: FunctionComponent<ProductsProps> = () => {
               </td>
               <td>
                 <div className="d-flex gap-1 flex-wrap">
-                  {/* כפתור פרטים */}
-                  <Link 
+                  <Link
                     to={`/products/${product._id}`}
                     className="btn btn-sm btn-outline-info"
                     title={`צפה בפרטי ${product.name}`}
                   >
                     <i className="fas fa-eye"></i>
                   </Link>
-                  
-                  {/* כפתור הוספה לעגלה */}
+
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => handleAddToCart(product)}
@@ -310,14 +325,12 @@ const Products: FunctionComponent<ProductsProps> = () => {
                       <i className="fa fa-cart-plus"></i>
                     )}
                   </button>
-                  
-                  {/* כפתור מועדפים */}
-                  <FavoriteButton 
+
+                  <FavoriteButton
                     productId={product._id as string}
                     className="btn btn-sm"
                   />
-                  
-                  {/* כפתורי מנהל */}
+
                   {isAdmin && (
                     <>
                       <button
@@ -365,10 +378,12 @@ const Products: FunctionComponent<ProductsProps> = () => {
           )}
         </div>
 
-        {/* שורת חיפוש וסינון */}
         <div className="row mb-4">
           <div className="col-lg-6">
-            <SearchBar onSearch={handleSearch} placeholder="חפש מוצרים לפי שם או תיאור..." />
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder="חפש מוצרים לפי שם או תיאור..."
+            />
           </div>
           <div className="col-lg-3">
             <select
@@ -377,8 +392,10 @@ const Products: FunctionComponent<ProductsProps> = () => {
               onChange={(e) => handleCategoryFilter(e.target.value)}
             >
               <option value="all">כל הקטגוריות</option>
-              {categories.slice(1).map(category => (
-                <option key={category} value={category}>{category}</option>
+              {categories.slice(1).map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
               ))}
             </select>
           </div>
@@ -386,16 +403,20 @@ const Products: FunctionComponent<ProductsProps> = () => {
             <div className="btn-group w-100" role="group">
               <button
                 type="button"
-                className={`btn ${viewMode === 'cards' ? 'btn-info' : 'btn-outline-info'}`}
-                onClick={() => setViewMode('cards')}
+                className={`btn ${
+                  viewMode === "cards" ? "btn-info" : "btn-outline-info"
+                }`}
+                onClick={() => setViewMode("cards")}
                 title="תצוגת כרטיסים"
               >
                 <i className="fa fa-th-large"></i>
               </button>
               <button
                 type="button"
-                className={`btn ${viewMode === 'table' ? 'btn-info' : 'btn-outline-info'}`}
-                onClick={() => setViewMode('table')}
+                className={`btn ${
+                  viewMode === "table" ? "btn-info" : "btn-outline-info"
+                }`}
+                onClick={() => setViewMode("table")}
                 title="תצוגת טבלה"
               >
                 <i className="fa fa-table"></i>
@@ -404,7 +425,6 @@ const Products: FunctionComponent<ProductsProps> = () => {
           </div>
         </div>
 
-        {/* תוצאות החיפוש */}
         <div className="mb-3">
           <small className="text-muted">
             נמצאו {filteredProducts.length} מוצרים
@@ -413,9 +433,12 @@ const Products: FunctionComponent<ProductsProps> = () => {
           </small>
         </div>
 
-        {/* תצוגת המוצרים */}
         {filteredProducts.length ? (
-          viewMode === 'cards' ? renderCards() : renderTable()
+          viewMode === "cards" ? (
+            renderCards()
+          ) : (
+            renderTable()
+          )
         ) : (
           <div className="text-center py-5">
             <i className="fa fa-search fa-3x text-muted mb-3"></i>
@@ -425,7 +448,6 @@ const Products: FunctionComponent<ProductsProps> = () => {
         )}
       </div>
 
-      {/* מודלים */}
       <AddProductModal
         show={openAddModal}
         onHide={() => setOpenAddModal(false)}
@@ -443,7 +465,7 @@ const Products: FunctionComponent<ProductsProps> = () => {
         refresh={refresh}
         productId={productId}
       />
-      
+
       <Footer />
     </>
   );

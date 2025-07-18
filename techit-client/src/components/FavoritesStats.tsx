@@ -130,7 +130,6 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
 
   return (
     <Layout title="סטטיסטיקות מועדפים">
-      {/* Summary cards */}
       <div className="row mb-4">
         <div className="col-md-4">
           <div className="card bg-primary text-white">
@@ -185,7 +184,6 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
         </div>
       </div>
 
-      {/* Statistics table */}
       <div className="card shadow-sm">
         <div className="card-header bg-info text-white">
           <h5 className="mb-0">
@@ -286,7 +284,6 @@ const FavoritesStats: FunctionComponent<FavoritesStatsProps> = () => {
         </div>
       </div>
 
-      {/* Explanation */}
       <div className="card mt-4">
         <div className="card-header">
           <h6 className="mb-0">

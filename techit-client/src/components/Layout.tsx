@@ -19,7 +19,7 @@ const Layout: FunctionComponent<LayoutProps> = ({
   className = "",
   title
 }) => {
-  // עדכון title של הדף
+  // Set the document title if provided
   if (title) {
     document.title = `${title} - TechIt`;
   }

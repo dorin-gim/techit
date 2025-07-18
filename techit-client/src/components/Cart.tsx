@@ -23,12 +23,12 @@ const Cart: FunctionComponent<CartProps> = () => {
   } = useCart();
 
   useEffect(() => {
-    // טען את פריטי העגלה בעת טעינת הקומפוננטה
+    // Load cart items when component mounts
     dispatch(fetchCartItems());
   }, [dispatch]);
 
   useEffect(() => {
-    // הצג שגיאות בעזרת toast
+    // Display errors using toast
     if (error) {
       toast.error(error);
       dispatch(clearError());
@@ -86,7 +86,6 @@ const Cart: FunctionComponent<CartProps> = () => {
     <Layout title="עגלת הקניות שלי">
       {items.length > 0 ? (
         <>
-          {/* Cart Header */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
               <h5 className="mb-0">
@@ -104,14 +103,12 @@ const Cart: FunctionComponent<CartProps> = () => {
             </button>
           </div>
 
-          {/* Cart Items */}
           <div className="row">
             <div className="col-lg-8">
               {items.map((item) => (
                 <div key={item._id} className="card mb-3 shadow-sm">
                   <div className="card-body">
                     <div className="row align-items-center">
-                      {/* Product Image */}
                       <div className="col-md-2">
                         <img
                           src={item.image}
@@ -124,7 +121,6 @@ const Cart: FunctionComponent<CartProps> = () => {
                         />
                       </div>
 
-                      {/* Product Info */}
                       <div className="col-md-4">
                         <h6 className="card-title mb-1">{item.name}</h6>
                         <small className="text-muted">{item.category}</small>
@@ -133,7 +129,6 @@ const Cart: FunctionComponent<CartProps> = () => {
                         </div>
                       </div>
 
-                      {/* Quantity Controls */}
                       <div className="col-md-3">
                         <div className="d-flex align-items-center">
                           <button
@@ -153,7 +148,6 @@ const Cart: FunctionComponent<CartProps> = () => {
                         </div>
                       </div>
 
-                      {/* Price and Remove */}
                       <div className="col-md-3 text-end">
                         <div className="mb-2">
                           <strong className="text-success fs-5">
@@ -177,7 +171,6 @@ const Cart: FunctionComponent<CartProps> = () => {
               ))}
             </div>
 
-            {/* Cart Summary */}
             <div className="col-lg-4">
               <div className="card shadow-sm">
                 <div className="card-header bg-info text-white">
@@ -224,7 +217,6 @@ const Cart: FunctionComponent<CartProps> = () => {
                 </div>
               </div>
 
-              {/* Additional Info */}
               <div className="card mt-3">
                 <div className="card-body">
                   <h6>

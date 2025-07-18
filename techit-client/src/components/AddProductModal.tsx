@@ -31,7 +31,6 @@ const AddProductModal: FunctionComponent<AddProductModalProps> = ({
           <AddProduct onHide={onHide} refresh={refresh} />
         </Modal.Body>
         <Modal.Footer>
-          {/* <Button onClick={props.onHide}>Close</Button> */}
         </Modal.Footer>
       </Modal>
     </>

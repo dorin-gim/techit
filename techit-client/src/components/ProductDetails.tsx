@@ -23,7 +23,7 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
   const { dispatch, loading: cartLoading } = useCart();
 
   useEffect(() => {
-    // בדיקה אם מנהל
+    //  Check if admin
     if (localStorage.getItem("token")) {
       try {
         const payload = getPayloadFromToken();
@@ -67,17 +67,16 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
     }
 
     try {
-      // הוסף לעגלה במצב לוקלי מיידית לUX טוב
+      // Add to cart in local mode immediately for good UX
       dispatch(addToCartLocal(product));
       toast.success(`${product.name} נוסף לעגלה!`);
 
-      // שלח לשרת ברקע
+      // Send to server in background
       await dispatch(addToCartAsync(product._id as string)).unwrap();
-      
-      // רענן את העגלה מהשרת
+
+      // Refresh the cart from the server
       dispatch(fetchCartItems());
     } catch (error: any) {
-      // אם השרת נכשל, הצג הודעת שגיאה
       toast.error(error || "שגיאה בהוספה לעגלה");
     }
   };
@@ -88,12 +87,12 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
 
   const handleBuyNow = async () => {
     if (!product) return;
-    
-    // הוסף לעגלה ועבור לעמוד עגלת הקניות
+
+    // Add to cart and go to shopping cart page
     await handleAddToCart();
     setTimeout(() => {
       navigate("/cart");
-    }, 500); // המתן קצת כדי שההודעה תופיע
+    }, 500); 
   };
 
   if (loading) {
@@ -127,7 +126,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
 
   return (
     <Layout title={product.name}>
-      {/* Breadcrumb */}
       <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
@@ -145,7 +143,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
       </nav>
 
       <div className="row">
-        {/* תמונת המוצר */}
         <div className="col-lg-6 mb-4">
           <div className="card shadow-sm">
             <div className="position-relative">
@@ -165,7 +162,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                 </div>
               )}
               
-              {/* Badge for available status */}
               <div className="position-absolute top-0 end-0 m-3">
                 <span className={`badge fs-6 p-2 ${product.available ? "bg-success" : "bg-danger"}`}>
                   <i className={`fas ${product.available ? "fa-check-circle" : "fa-times-circle"} me-1`}></i>
@@ -176,7 +172,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
           </div>
         </div>
 
-        {/* פרטי המוצר */}
         <div className="col-lg-6">
           <div className="card shadow-sm">
             <div className="card-header bg-info text-white">
@@ -186,10 +181,8 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
               </h5>
             </div>
             <div className="card-body">
-              {/* שם המוצר */}
               <h1 className="card-title text-primary mb-3 display-6">{product.name}</h1>
 
-              {/* קטגוריה */}
               <div className="mb-3">
                 <span className="badge bg-info fs-6 p-2">
                   <i className="fas fa-tag me-1"></i>
@@ -197,7 +190,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                 </span>
               </div>
 
-              {/* מחיר */}
               <div className="mb-4 p-3 bg-light rounded">
                 <h2 className="text-success mb-1 display-5">
                   <i className="fas fa-shekel-sign me-2"></i>
@@ -206,7 +198,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                 <small className="text-muted">מחיר כולל מע"ם | משלוח חינם</small>
               </div>
 
-              {/* תיאור */}
               <div className="mb-4">
                 <h6 className="fw-bold mb-2">
                   <i className="fas fa-align-right me-2 text-info"></i>
@@ -215,7 +206,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                 <p className="text-muted lh-lg">{product.description}</p>
               </div>
 
-              {/* כמות במלאי (רק למנהלים) */}
               {isAdmin && (
                 <div className="mb-4 p-2 bg-warning bg-opacity-10 rounded">
                   <h6 className="fw-bold mb-1">
@@ -228,9 +218,7 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                 </div>
               )}
 
-              {/* כפתורי פעולה */}
               <div className="d-grid gap-2">
-                {/* כפתור קנייה מהירה */}
                 <button
                   className="btn btn-success btn-lg py-3"
                   onClick={handleBuyNow}
@@ -250,7 +238,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                 </button>
                 
                 <div className="row g-2">
-                  {/* כפתור הוספה לעגלה */}
                   <div className="col-8">
                     <button
                       className="btn btn-primary w-100 py-2"
@@ -271,7 +258,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
                     </button>
                   </div>
 
-                  {/* כפתור מועדפים */}
                   <div className="col-4">
                     <FavoriteButton 
                       productId={product._id as string}
@@ -285,7 +271,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
         </div>
       </div>
 
-      {/* מידע נוסף */}
       <div className="row mt-5">
         <div className="col-12">
           <div className="card shadow-sm">
@@ -331,7 +316,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
         </div>
       </div>
 
-      {/* המלצות למוצרים דומים */}
       <div className="row mt-4">
         <div className="col-12">
           <div className="card shadow-sm">
@@ -365,7 +349,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
         </div>
       </div>
 
-      {/* כפתור חזרה קבוע */}
       <div className="fixed-bottom p-3 d-block d-md-none">
         <button 
           className="btn btn-secondary w-100" 
@@ -376,7 +359,6 @@ const ProductDetails: FunctionComponent<ProductDetailsProps> = () => {
         </button>
       </div>
 
-      {/* Custom CSS for this component */}
       <style>{`
         .breadcrumb-item + .breadcrumb-item::before {
           content: "←";

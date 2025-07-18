@@ -31,19 +31,21 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
       setSubmitError("");
       
       try {
-        await addProduct({ 
-          ...values, 
-          price: Number(values.price), 
-          available: true 
+        await addProduct({
+          ...values,
+          price: Number(values.price),
+          available: true,
         });
-        
+
         onHide();
         refresh();
-        
-        // הצגת הודעת הצלחה
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success-modern position-fixed fade-in';
-        successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);';
+
+        //  Display success message
+        const successAlert = document.createElement("div");
+        successAlert.className =
+          "alert alert-success-modern position-fixed fade-in";
+        successAlert.style.cssText =
+          "top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);";
         successAlert.innerHTML = `
           <i class="fas fa-check-circle alert-icon text-success" style="font-size: 1.5rem;"></i>
           <div class="alert-content">
@@ -52,10 +54,10 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
           </div>
         `;
         document.body.appendChild(successAlert);
-        
+
         setTimeout(() => {
           if (document.body.contains(successAlert)) {
-            successAlert.style.animation = 'fadeOut 0.3s ease-out forwards';
+            successAlert.style.animation = "fadeOut 0.3s ease-out forwards";
             setTimeout(() => {
               if (document.body.contains(successAlert)) {
                 document.body.removeChild(successAlert);
@@ -63,7 +65,6 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
             }, 300);
           }
         }, 3000);
-        
       } catch (error: any) {
         let errorMessage = "שגיאה בהוספת המוצר";
         
@@ -80,11 +81,6 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
         }
         
         setSubmitError(errorMessage);
-        
-        // רטט במכשירים ניידים
-        if ('vibrate' in navigator) {
-          navigator.vibrate([200, 100, 200]);
-        }
         
       } finally {
         setIsSubmitting(false);
@@ -103,10 +99,10 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
   };
 
   const handleImageChange = (value: string) => {
-    formik.setFieldValue('image', value);
-    
-    // בדיקה אם זה URL תקין לתמונה
-    if (value && value.startsWith('http')) {
+    formik.setFieldValue("image", value);
+
+    // Checking if this is a valid URL for an image
+    if (value && value.startsWith("http")) {
       const img = new Image();
       img.onload = () => setImagePreview(value);
       img.onerror = () => setImagePreview("");
@@ -117,20 +113,20 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
   };
 
   const formatPrice = (value: string) => {
-    // הסרת תווים לא רלוונטיים
-    const numericValue = value.replace(/[^\d.]/g, '');
-    
-    // מניעת יותר מנקודה אחת
-    const parts = numericValue.split('.');
+    // Remove irrelevant characters
+    const numericValue = value.replace(/[^\d.]/g, "");
+
+    // Preventing more than one point
+    const parts = numericValue.split(".");
     if (parts.length > 2) {
-      return parts[0] + '.' + parts.slice(1).join('');
+      return parts[0] + "." + parts.slice(1).join("");
     }
-    
-    // הגבלת ספרות אחרי הנקודה
+
+    // Limit digits after the point
     if (parts[1] && parts[1].length > 2) {
-      return parts[0] + '.' + parts[1].substring(0, 2);
+      return parts[0] + "." + parts[1].substring(0, 2);
     }
-    
+
     return numericValue;
   };
 
@@ -149,8 +145,6 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
     <div className="container-fluid px-0">
       <div className="row g-0">
         <div className="col-12">
-          
-          {/* הצגת שגיאת שרת */}
           {submitError && (
             <div className="alert alert-danger-modern mb-4 fade-in">
               <i className="fas fa-exclamation-triangle alert-icon"></i>
@@ -163,11 +157,7 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
 
           <form onSubmit={formik.handleSubmit} noValidate autoComplete="off">
             <div className="row g-4">
-              
-              {/* עמודה ראשונה */}
               <div className="col-md-6">
-                
-                {/* שדה שם מוצר */}
                 <div className="mb-4">
                   <label htmlFor="name" className="form-label fw-semibold mb-2">
                     <i className="fas fa-tag me-2 text-info"></i>
@@ -189,7 +179,7 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                     />
                     <i className="fas fa-box position-absolute end-0 top-50 translate-middle-y me-3 text-muted"></i>
                   </div>
-                  
+
                   <div className="d-flex justify-content-between mt-1">
                     <div>
                       {formik.touched.name && formik.errors.name && (
@@ -198,21 +188,27 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                           {formik.errors.name}
                         </div>
                       )}
-                      
-                      {formik.touched.name && !formik.errors.name && formik.values.name && (
-                        <div className="success-message fade-in">
-                          <i className="fas fa-check-circle"></i>
-                          שם מוצר תקין
-                        </div>
-                      )}
+
+                      {formik.touched.name &&
+                        !formik.errors.name &&
+                        formik.values.name && (
+                          <div className="success-message fade-in">
+                            <i className="fas fa-check-circle"></i>
+                            שם מוצר תקין
+                          </div>
+                        )}
                     </div>
-                    <small className="text-muted">{formik.values.name.length}/100</small>
+                    <small className="text-muted">
+                      {formik.values.name.length}/100
+                    </small>
                   </div>
                 </div>
 
-                {/* שדה מחיר */}
                 <div className="mb-4">
-                  <label htmlFor="price" className="form-label fw-semibold mb-2">
+                  <label
+                    htmlFor="price"
+                    className="form-label fw-semibold mb-2"
+                  >
                     <i className="fas fa-shekel-sign me-2 text-info"></i>
                     מחיר
                     <span className="text-danger">*</span>
@@ -227,7 +223,7 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                       value={formik.values.price}
                       onChange={(e) => {
                         const formatted = formatPrice(e.target.value);
-                        formik.setFieldValue('price', formatted);
+                        formik.setFieldValue("price", formatted);
                       }}
                       onBlur={formik.handleBlur}
                       dir="ltr"
@@ -235,7 +231,7 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                     />
                     <i className="fas fa-coins position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
                   </div>
-                  
+
                   <div className="d-flex justify-content-between mt-1">
                     <div>
                       {formik.touched.price && formik.errors.price && (
@@ -244,21 +240,25 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                           {formik.errors.price}
                         </div>
                       )}
-                      
-                      {formik.touched.price && !formik.errors.price && formik.values.price && (
-                        <div className="success-message fade-in">
-                          <i className="fas fa-check-circle"></i>
-                          מחיר תקין
-                        </div>
-                      )}
+
+                      {formik.touched.price &&
+                        !formik.errors.price &&
+                        formik.values.price && (
+                          <div className="success-message fade-in">
+                            <i className="fas fa-check-circle"></i>
+                            מחיר תקין
+                          </div>
+                        )}
                     </div>
                     <small className="text-muted">₪ ש״ח</small>
                   </div>
                 </div>
 
-                {/* שדה קטגוריה */}
                 <div className="mb-4">
-                  <label htmlFor="category" className="form-label fw-semibold mb-2">
+                  <label
+                    htmlFor="category"
+                    className="form-label fw-semibold mb-2"
+                  >
                     <i className="fas fa-list me-2 text-info"></i>
                     קטגוריה
                     <span className="text-danger">*</span>
@@ -278,8 +278,7 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                       list="category-suggestions"
                     />
                     <i className="fas fa-folder position-absolute end-0 top-50 translate-middle-y me-3 text-muted"></i>
-                    
-                    {/* רשימת הצעות קטגוריות */}
+
                     <datalist id="category-suggestions">
                       <option value="לפטופים">לפטופים</option>
                       <option value="אוזניות וסלולר">אוזניות וסלולר</option>
@@ -291,7 +290,7 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                       <option value="טאבלטים">טאבלטים</option>
                     </datalist>
                   </div>
-                  
+
                   <div className="d-flex justify-content-between mt-1">
                     <div>
                       {formik.touched.category && formik.errors.category && (
@@ -300,25 +299,29 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                           {formik.errors.category}
                         </div>
                       )}
-                      
-                      {formik.touched.category && !formik.errors.category && formik.values.category && (
-                        <div className="success-message fade-in">
-                          <i className="fas fa-check-circle"></i>
-                          קטגוריה תקינה
-                        </div>
-                      )}
+
+                      {formik.touched.category &&
+                        !formik.errors.category &&
+                        formik.values.category && (
+                          <div className="success-message fade-in">
+                            <i className="fas fa-check-circle"></i>
+                            קטגוריה תקינה
+                          </div>
+                        )}
                     </div>
-                    <small className="text-muted">{formik.values.category.length}/50</small>
+                    <small className="text-muted">
+                      {formik.values.category.length}/50
+                    </small>
                   </div>
                 </div>
               </div>
 
-              {/* עמודה שנייה */}
               <div className="col-md-6">
-                
-                {/* שדה תיאור */}
                 <div className="mb-4">
-                  <label htmlFor="description" className="form-label fw-semibold mb-2">
+                  <label
+                    htmlFor="description"
+                    className="form-label fw-semibold mb-2"
+                  >
                     <i className="fas fa-align-right me-2 text-info"></i>
                     תיאור המוצר
                     <span className="text-danger">*</span>
@@ -335,32 +338,43 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                     maxLength={500}
                     style={{ resize: "vertical", minHeight: "120px" }}
                   />
-                  
+
                   <div className="d-flex justify-content-between mt-1">
                     <div>
-                      {formik.touched.description && formik.errors.description && (
-                        <div className="error-message fade-in">
-                          <i className="fas fa-exclamation-circle"></i>
-                          {formik.errors.description}
-                        </div>
-                      )}
-                      
-                      {formik.touched.description && !formik.errors.description && formik.values.description && (
-                        <div className="success-message fade-in">
-                          <i className="fas fa-check-circle"></i>
-                          תיאור מפורט וטוב
-                        </div>
-                      )}
+                      {formik.touched.description &&
+                        formik.errors.description && (
+                          <div className="error-message fade-in">
+                            <i className="fas fa-exclamation-circle"></i>
+                            {formik.errors.description}
+                          </div>
+                        )}
+
+                      {formik.touched.description &&
+                        !formik.errors.description &&
+                        formik.values.description && (
+                          <div className="success-message fade-in">
+                            <i className="fas fa-check-circle"></i>
+                            תיאור מפורט וטוב
+                          </div>
+                        )}
                     </div>
-                    <small className={`${formik.values.description.length > 450 ? 'text-warning' : 'text-muted'}`}>
+                    <small
+                      className={`${
+                        formik.values.description.length > 450
+                          ? "text-warning"
+                          : "text-muted"
+                      }`}
+                    >
                       {formik.values.description.length}/500
                     </small>
                   </div>
                 </div>
 
-                {/* שדה תמונה */}
                 <div className="mb-4">
-                  <label htmlFor="image" className="form-label fw-semibold mb-2">
+                  <label
+                    htmlFor="image"
+                    className="form-label fw-semibold mb-2"
+                  >
                     <i className="fas fa-image me-2 text-info"></i>
                     כתובת תמונה
                     <span className="text-danger">*</span>
@@ -383,34 +397,37 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
                     />
                     <i className="fas fa-link position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
                   </div>
-                  
+
                   {formik.touched.image && formik.errors.image && (
                     <div className="error-message fade-in">
                       <i className="fas fa-exclamation-circle"></i>
                       {formik.errors.image}
                     </div>
                   )}
-                  
-                  {formik.touched.image && !formik.errors.image && formik.values.image && (
-                    <div className="success-message fade-in">
-                      <i className="fas fa-check-circle"></i>
-                      כתובת תמונה תקינה
-                    </div>
-                  )}
 
-                  {/* תצוגה מקדימה של התמונה */}
+                  {formik.touched.image &&
+                    !formik.errors.image &&
+                    formik.values.image && (
+                      <div className="success-message fade-in">
+                        <i className="fas fa-check-circle"></i>
+                        כתובת תמונה תקינה
+                      </div>
+                    )}
+
                   {imagePreview && (
                     <div className="mt-3 text-center">
-                      <small className="text-muted d-block mb-2">תצוגה מקדימה:</small>
+                      <small className="text-muted d-block mb-2">
+                        תצוגה מקדימה:
+                      </small>
                       <div className="border rounded p-2 bg-light">
-                        <img 
-                          src={imagePreview} 
-                          alt="תצוגה מקדימה" 
-                          className="img-thumbnail" 
-                          style={{ 
-                            maxWidth: "150px", 
+                        <img
+                          src={imagePreview}
+                          alt="תצוגה מקדימה"
+                          className="img-thumbnail"
+                          style={{
+                            maxWidth: "150px",
                             maxHeight: "150px",
-                            objectFit: "cover"
+                            objectFit: "cover",
                           }}
                           onError={() => setImagePreview("")}
                         />
@@ -421,7 +438,6 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
               </div>
             </div>
 
-            {/* הודעת מצב הטופס */}
             {formik.dirty && !isFormValid() && (
               <div className="alert alert-info-modern mb-4">
                 <i className="fas fa-info-circle alert-icon"></i>
@@ -433,7 +449,6 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
               </div>
             )}
 
-            {/* כפתור שמירה */}
             <div className="d-grid gap-2">
               <button
                 className="btn btn-gradient-success py-2 fw-semibold"
@@ -454,17 +469,22 @@ const AddProduct: FunctionComponent<AddProductProps> = ({
               </button>
             </div>
 
-            {/* הצגת מצב הטופס למטרות פיתוח */}
-            {process.env.NODE_ENV === 'development' && (
+            {process.env.NODE_ENV === "development" && (
               <div className="mt-4 p-3 bg-light rounded border">
                 <small className="text-muted">
-                  <strong>🔧 מצב פיתוח:</strong><br/>
-                  ✅ Valid: {formik.isValid ? 'כן' : 'לא'}<br/>
-                  ✏️ Dirty: {formik.dirty ? 'כן' : 'לא'}<br/>
-                  👆 Touched: {Object.keys(formik.touched).join(', ') || 'אף שדה'}<br/>
-                  ❌ Errors: {Object.keys(formik.errors).join(', ') || 'אין שגיאות'}<br/>
-                  🎯 Form Valid: {isFormValid() ? 'כן' : 'לא'}<br/>
-                  🖼️ Image Preview: {imagePreview ? 'יש' : 'אין'}
+                  <strong>🔧 מצב פיתוח:</strong>
+                  <br />✅ Valid: {formik.isValid ? "כן" : "לא"}
+                  <br />
+                  ✏️ Dirty: {formik.dirty ? "כן" : "לא"}
+                  <br />
+                  👆 Touched:{" "}
+                  {Object.keys(formik.touched).join(", ") || "אף שדה"}
+                  <br />❌ Errors:{" "}
+                  {Object.keys(formik.errors).join(", ") || "אין שגיאות"}
+                  <br />
+                  🎯 Form Valid: {isFormValid() ? "כן" : "לא"}
+                  <br />
+                  🖼️ Image Preview: {imagePreview ? "יש" : "אין"}
                 </small>
               </div>
             )}

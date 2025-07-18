@@ -267,13 +267,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const addItem = (product: Product) => {
     if (!product.available) {
-      dispatch({ type: 'SET_ERROR', payload: 'מוצר זה אינו זמין כרגע' });
+      dispatch({ type: "SET_ERROR", payload: "מוצר זה אינו זמין כרגע" });
       return;
     }
 
-    dispatch({ type: 'ADD_ITEM', payload: product });
-    
-    // הצגת הודעת הצלחה
+    dispatch({ type: "ADD_ITEM", payload: product });
+
+    // Display success message
     showSuccessNotification(`${product.name} נוסף לעגלה`);
   };
 

@@ -22,11 +22,12 @@ const Login: FunctionComponent<LoginProps> = () => {
       try {
         const res = await checkUser(values);
         localStorage.setItem("token", JSON.stringify(res.data));
-        
-        // הצגת הודעת הצלחה
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success-modern position-fixed';
-        successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+
+        // Display success message
+        const successAlert = document.createElement("div");
+        successAlert.className = "alert alert-success-modern position-fixed";
+        successAlert.style.cssText =
+          "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
         successAlert.innerHTML = `
           <i class="fas fa-check-circle alert-icon"></i>
           <div class="alert-content">
@@ -35,15 +36,14 @@ const Login: FunctionComponent<LoginProps> = () => {
           </div>
         `;
         document.body.appendChild(successAlert);
-        
+
         setTimeout(() => {
           document.body.removeChild(successAlert);
           navigate("/home");
         }, 1500);
-        
       } catch (err: any) {
         let errorMessage = "אירעה שגיאה בהתחברות";
-        
+
         if (err.response?.status === 400) {
           errorMessage = "אימייל או סיסמה שגויים";
         } else if (err.response?.status === 404) {
@@ -53,15 +53,8 @@ const Login: FunctionComponent<LoginProps> = () => {
         } else if (err.response?.data) {
           errorMessage = err.response.data;
         }
-        
+
         setSubmitError(errorMessage);
-        
-        // רטט במכשירים ניידים
-        if ('vibrate' in navigator) {
-          navigator.vibrate(200);
-        }
-      } finally {
-        setLoading(false);
       }
     },
   });
@@ -91,7 +84,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                   <p className="text-muted">התחבר לחשבון שלך</p>
                 </div>
 
-                {/* הצגת שגיאת שרת */}
                 {submitError && (
                   <div className="alert alert-danger-modern mb-4 fade-in">
                     <i className="fas fa-exclamation-triangle alert-icon"></i>
@@ -103,7 +95,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                 )}
 
                 <form onSubmit={formik.handleSubmit} noValidate>
-                  {/* שדה אימייל */}
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label fw-semibold">
                       <i className="fas fa-envelope me-2 text-info"></i>
@@ -126,7 +117,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                       <i className="fas fa-at position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
                     </div>
                     
-                    {/* הצגת שגיאת ולידציה */}
                     {formik.touched.email && formik.errors.email && (
                       <div className="error-message fade-in">
                         <i className="fas fa-exclamation-circle"></i>
@@ -134,7 +124,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                       </div>
                     )}
                     
-                    {/* הצגת הודעת הצלחה */}
                     {formik.touched.email && !formik.errors.email && formik.values.email && (
                       <div className="success-message fade-in">
                         <i className="fas fa-check-circle"></i>
@@ -143,7 +132,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                     )}
                   </div>
 
-                  {/* שדה סיסמה */}
                   <div className="mb-4">
                     <label htmlFor="password" className="form-label fw-semibold">
                       <i className="fas fa-lock me-2 text-info"></i>
@@ -175,7 +163,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                       </button>
                     </div>
                     
-                    {/* הצגת שגיאת ולידציה */}
                     {formik.touched.password && formik.errors.password && (
                       <div className="error-message fade-in">
                         <i className="fas fa-exclamation-circle"></i>
@@ -183,7 +170,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                       </div>
                     )}
                     
-                    {/* הצגת הודעת הצלחה */}
                     {formik.touched.password && !formik.errors.password && formik.values.password && (
                       <div className="success-message fade-in">
                         <i className="fas fa-check-circle"></i>
@@ -192,7 +178,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                     )}
                   </div>
 
-                  {/* כפתור התחברות */}
                   <button
                     className="btn btn-gradient-info w-100 mb-3 py-2"
                     type="submit"
@@ -211,7 +196,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                     )}
                   </button>
 
-                  {/* קישור להרשמה */}
                   <div className="text-center">
                     <p className="mb-0 text-muted small">
                       עדיין אין לך חשבון?{" "}
@@ -225,7 +209,6 @@ const Login: FunctionComponent<LoginProps> = () => {
                   </div>
                 </form>
 
-                {/* הצגת מצב הטופס למטרות פיתוח */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="mt-4 p-3 bg-light rounded">
                     <small className="text-muted">

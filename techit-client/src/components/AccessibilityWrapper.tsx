@@ -88,8 +88,7 @@ const AccessibilityWrapper: FunctionComponent<AccessibilityWrapperProps> = ({
       aria-label={title ? `${title} - TechIt` : 'TechIt - חנות טכנולוגיה'}
     >
       {children}
-      
-      {/* Screen Reader Instructions */}
+
       <div className="sr-only">
         <h2>הוראות ניווט</h2>
         <ul>

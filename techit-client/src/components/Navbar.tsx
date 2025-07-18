@@ -85,7 +85,6 @@ const Navbar: FunctionComponent<NavbarProps> = () => {
                 </NavLink>
               </li>
 
-              {/* Admin Menu */}
               {isAdmin && (
                 <li className="nav-item dropdown">
                   <a

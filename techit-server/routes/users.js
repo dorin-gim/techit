@@ -54,7 +54,7 @@ const loginSchema = Joi.object({
   password: Joi.string().required().min(8),
 });
 
-// login - עם rate limiting
+// login - with rate limiting
 router.post("/login", loginLimiter, async (req, res) => {
   try {
     // 1. body validation

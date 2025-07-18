@@ -6,7 +6,6 @@ interface HomeProps {}
 const Home: FunctionComponent<HomeProps> = () => {
   return (
     <Layout title="ברוכים הבאים">
-      {/* Hero Section */}
       <div className="bg-primary text-white text-center py-5 rounded mb-5">
         <div className="container">
           <h1 className="display-4 mb-3">TechIt - חנות הטכנולוגיה שלכם</h1>
@@ -17,7 +16,6 @@ const Home: FunctionComponent<HomeProps> = () => {
         </div>
       </div>
 
-      {/* Features */}
       <div className="row">
         <div className="col-md-4 text-center mb-4">
           <i className="fas fa-laptop fa-3x text-info mb-3"></i>
@@ -36,7 +34,6 @@ const Home: FunctionComponent<HomeProps> = () => {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="row mt-5 py-4 bg-light rounded">
         <div className="col-md-3 text-center">
           <h3 className="text-info">500+</h3>

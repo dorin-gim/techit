@@ -21,9 +21,9 @@ const Register: FunctionComponent<RegisterProps> = () => {
       lowercase: false,
       numbers: false,
       special: false,
-      noSpaces: false
+      noSpaces: false,
     },
-    percentage: 0
+    percentage: 0,
   });
 
   const formik = useFormik({
@@ -32,15 +32,16 @@ const Register: FunctionComponent<RegisterProps> = () => {
     onSubmit: async (values) => {
       setLoading(true);
       setSubmitError("");
-      
+
       try {
         const res = await addUser({ ...values, isAdmin: false });
         localStorage.setItem("token", JSON.stringify(res.data));
-        
-        // הצגת הודעת הצלחה
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success-modern position-fixed fade-in';
-        successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);';
+
+        const successAlert = document.createElement("div");
+        successAlert.className =
+          "alert alert-success-modern position-fixed fade-in";
+        successAlert.style.cssText =
+          "top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);";
         successAlert.innerHTML = `
           <i class="fas fa-check-circle alert-icon text-success" style="font-size: 1.5rem;"></i>
           <div class="alert-content">
@@ -49,10 +50,10 @@ const Register: FunctionComponent<RegisterProps> = () => {
           </div>
         `;
         document.body.appendChild(successAlert);
-        
+
         setTimeout(() => {
           if (document.body.contains(successAlert)) {
-            successAlert.style.animation = 'fadeOut 0.3s ease-out forwards';
+            successAlert.style.animation = "fadeOut 0.3s ease-out forwards";
             setTimeout(() => {
               if (document.body.contains(successAlert)) {
                 document.body.removeChild(successAlert);
@@ -61,10 +62,9 @@ const Register: FunctionComponent<RegisterProps> = () => {
           }
           navigate("/home");
         }, 2000);
-        
       } catch (err: any) {
         let errorMessage = "אירעה שגיאה בהרשמה";
-        
+
         if (err.response?.status === 400) {
           errorMessage = "משתמש עם אימייל זה כבר קיים במערכת";
         } else if (err.response?.status === 422) {
@@ -74,18 +74,13 @@ const Register: FunctionComponent<RegisterProps> = () => {
         } else if (err.response?.data) {
           errorMessage = err.response.data;
         }
-        
+
         setSubmitError(errorMessage);
-        
-        // רטט במכשירים ניידים
-        if ('vibrate' in navigator) {
-          navigator.vibrate([200, 100, 200]);
-        }
-        
-        // scroll לתחילת הטופס כדי להציג את השגיאה
-        const form = document.querySelector('form');
+
+        // Scroll to top of form to show error
+        const form = document.querySelector("form");
         if (form) {
-          form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          form.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       } finally {
         setLoading(false);
@@ -93,7 +88,7 @@ const Register: FunctionComponent<RegisterProps> = () => {
     },
   });
 
-  // בדיקת חוזק סיסמה
+  // Password strength check
   useEffect(() => {
     const password = formik.values.password;
     if (password) {
@@ -110,9 +105,9 @@ const Register: FunctionComponent<RegisterProps> = () => {
           lowercase: false,
           numbers: false,
           special: false,
-          noSpaces: false
+          noSpaces: false,
         },
-        percentage: 0
+        percentage: 0,
       });
     }
   }, [formik.values.password]);
@@ -121,17 +116,23 @@ const Register: FunctionComponent<RegisterProps> = () => {
     const baseClass = "form-control";
     if (formik.touched[fieldName] && formik.errors[fieldName]) {
       return `${baseClass} is-invalid border-danger`;
-    } else if (formik.touched[fieldName] && !formik.errors[fieldName] && formik.values[fieldName]) {
+    } else if (
+      formik.touched[fieldName] &&
+      !formik.errors[fieldName] &&
+      formik.values[fieldName]
+    ) {
       return `${baseClass} is-valid border-success`;
     }
     return baseClass;
   };
 
   const isFormValid = () => {
-    return formik.isValid && 
-           formik.dirty && 
-           passwordStrength.score >= 5 && 
-           Object.keys(formik.errors).length === 0;
+    return (
+      formik.isValid &&
+      formik.dirty &&
+      passwordStrength.score >= 5 &&
+      Object.keys(formik.errors).length === 0
+    );
   };
 
   return (
@@ -141,17 +142,22 @@ const Register: FunctionComponent<RegisterProps> = () => {
           <div className="col-md-7 col-lg-6">
             <div className="card shadow-lg border-0 rounded-4">
               <div className="card-body p-5">
-                {/* כותרת */}
                 <div className="text-center mb-4">
                   <div className="mb-3">
-                    <i className="fas fa-laptop text-gradient-info" style={{ fontSize: "3rem" }}></i>
+                    <i
+                      className="fas fa-laptop text-gradient-info"
+                      style={{ fontSize: "3rem" }}
+                    ></i>
                   </div>
-                  <h2 className="card-title text-gradient-info mb-2 fw-bold">TechIt</h2>
-                  <p className="text-muted mb-0">צור חשבון חדש וצטרף לקהילה שלנו</p>
+                  <h2 className="card-title text-gradient-info mb-2 fw-bold">
+                    TechIt
+                  </h2>
+                  <p className="text-muted mb-0">
+                    צור חשבון חדש וצטרף לקהילה שלנו
+                  </p>
                   <small className="text-muted">כל השדות הם חובה</small>
                 </div>
 
-                {/* הצגת שגיאת שרת */}
                 {submitError && (
                   <div className="alert alert-danger-modern mb-4 fade-in">
                     <i className="fas fa-exclamation-triangle alert-icon"></i>
@@ -162,10 +168,16 @@ const Register: FunctionComponent<RegisterProps> = () => {
                   </div>
                 )}
 
-                <form onSubmit={formik.handleSubmit} noValidate autoComplete="off">
-                  {/* שדה שם */}
+                <form
+                  onSubmit={formik.handleSubmit}
+                  noValidate
+                  autoComplete="off"
+                >
                   <div className="mb-4">
-                    <label htmlFor="name" className="form-label fw-semibold mb-2">
+                    <label
+                      htmlFor="name"
+                      className="form-label fw-semibold mb-2"
+                    >
                       <i className="fas fa-user me-2 text-info"></i>
                       שם מלא
                     </label>
@@ -185,8 +197,7 @@ const Register: FunctionComponent<RegisterProps> = () => {
                       />
                       <i className="fas fa-id-card position-absolute end-0 top-50 translate-middle-y me-3 text-muted"></i>
                     </div>
-                    
-                    {/* מונה תווים */}
+
                     <div className="d-flex justify-content-between mt-1">
                       <div>
                         {formik.touched.name && formik.errors.name && (
@@ -195,21 +206,27 @@ const Register: FunctionComponent<RegisterProps> = () => {
                             {formik.errors.name}
                           </div>
                         )}
-                        
-                        {formik.touched.name && !formik.errors.name && formik.values.name && (
-                          <div className="success-message fade-in">
-                            <i className="fas fa-check-circle"></i>
-                            שם תקין
-                          </div>
-                        )}
+
+                        {formik.touched.name &&
+                          !formik.errors.name &&
+                          formik.values.name && (
+                            <div className="success-message fade-in">
+                              <i className="fas fa-check-circle"></i>
+                              שם תקין
+                            </div>
+                          )}
                       </div>
-                      <small className="text-muted">{formik.values.name.length}/50</small>
+                      <small className="text-muted">
+                        {formik.values.name.length}/50
+                      </small>
                     </div>
                   </div>
 
-                  {/* שדה אימייל */}
                   <div className="mb-4">
-                    <label htmlFor="email" className="form-label fw-semibold mb-2">
+                    <label
+                      htmlFor="email"
+                      className="form-label fw-semibold mb-2"
+                    >
                       <i className="fas fa-envelope me-2 text-info"></i>
                       כתובת אימייל
                     </label>
@@ -230,7 +247,7 @@ const Register: FunctionComponent<RegisterProps> = () => {
                       />
                       <i className="fas fa-at position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
                     </div>
-                    
+
                     <div className="d-flex justify-content-between mt-1">
                       <div>
                         {formik.touched.email && formik.errors.email && (
@@ -239,21 +256,27 @@ const Register: FunctionComponent<RegisterProps> = () => {
                             {formik.errors.email}
                           </div>
                         )}
-                        
-                        {formik.touched.email && !formik.errors.email && formik.values.email && (
-                          <div className="success-message fade-in">
-                            <i className="fas fa-check-circle"></i>
-                            כתובת אימייל תקינה
-                          </div>
-                        )}
+
+                        {formik.touched.email &&
+                          !formik.errors.email &&
+                          formik.values.email && (
+                            <div className="success-message fade-in">
+                              <i className="fas fa-check-circle"></i>
+                              כתובת אימייל תקינה
+                            </div>
+                          )}
                       </div>
-                      <small className="text-muted">{formik.values.email.length}/100</small>
+                      <small className="text-muted">
+                        {formik.values.email.length}/100
+                      </small>
                     </div>
                   </div>
 
-                  {/* שדה סיסמה */}
                   <div className="mb-4">
-                    <label htmlFor="password" className="form-label fw-semibold mb-2">
+                    <label
+                      htmlFor="password"
+                      className="form-label fw-semibold mb-2"
+                    >
                       <i className="fas fa-lock me-2 text-info"></i>
                       סיסמה
                     </label>
@@ -280,68 +303,151 @@ const Register: FunctionComponent<RegisterProps> = () => {
                         tabIndex={-1}
                         title={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
                       >
-                        <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"} text-muted`}></i>
+                        <i
+                          className={`fas ${
+                            showPassword ? "fa-eye-slash" : "fa-eye"
+                          } text-muted`}
+                        ></i>
                       </button>
                     </div>
-                    
-                    {/* מד חוזק סיסמה */}
+
                     {formik.values.password && (
                       <div className="password-strength mt-3">
                         <div className="d-flex justify-content-between align-items-center mb-2">
-                          <small className="text-muted fw-semibold">חוזק הסיסמה:</small>
-                          <small className={`text-${passwordStrength.color} fw-bold`}>
+                          <small className="text-muted fw-semibold">
+                            חוזק הסיסמה:
+                          </small>
+                          <small
+                            className={`text-${passwordStrength.color} fw-bold`}
+                          >
                             {passwordStrength.strength}
                           </small>
                         </div>
-                        <div className="progress mb-3" style={{ height: "6px" }}>
-                          <div 
+                        <div
+                          className="progress mb-3"
+                          style={{ height: "6px" }}
+                        >
+                          <div
                             className={`progress-bar bg-${passwordStrength.color}`}
-                            style={{ 
-                              width: `${passwordStrength.percentage}%`, 
-                              transition: "width 0.4s ease-in-out" 
+                            style={{
+                              width: `${passwordStrength.percentage}%`,
+                              transition: "width 0.4s ease-in-out",
                             }}
                           ></div>
                         </div>
                       </div>
                     )}
-                    
-                    {/* דרישות סיסמה */}
+
                     {formik.values.password && (
                       <div className="password-requirements mt-3 p-3 bg-light rounded">
-                        <small className="text-muted fw-semibold mb-2 d-block">דרישות סיסמה:</small>
+                        <small className="text-muted fw-semibold mb-2 d-block">
+                          דרישות סיסמה:
+                        </small>
                         <div className="row g-2">
                           <div className="col-6">
-                            <div className={`password-requirement ${passwordStrength.requirements.length ? 'text-success' : 'text-muted'}`}>
-                              <i className={`fas ${passwordStrength.requirements.length ? 'fa-check-circle' : 'fa-circle'} me-2`}></i>
+                            <div
+                              className={`password-requirement ${
+                                passwordStrength.requirements.length
+                                  ? "text-success"
+                                  : "text-muted"
+                              }`}
+                            >
+                              <i
+                                className={`fas ${
+                                  passwordStrength.requirements.length
+                                    ? "fa-check-circle"
+                                    : "fa-circle"
+                                } me-2`}
+                              ></i>
                               <small>לפחות 8 תווים</small>
                             </div>
-                            <div className={`password-requirement ${passwordStrength.requirements.uppercase ? 'text-success' : 'text-muted'}`}>
-                              <i className={`fas ${passwordStrength.requirements.uppercase ? 'fa-check-circle' : 'fa-circle'} me-2`}></i>
+                            <div
+                              className={`password-requirement ${
+                                passwordStrength.requirements.uppercase
+                                  ? "text-success"
+                                  : "text-muted"
+                              }`}
+                            >
+                              <i
+                                className={`fas ${
+                                  passwordStrength.requirements.uppercase
+                                    ? "fa-check-circle"
+                                    : "fa-circle"
+                                } me-2`}
+                              ></i>
                               <small>אות גדולה (A-Z)</small>
                             </div>
-                            <div className={`password-requirement ${passwordStrength.requirements.lowercase ? 'text-success' : 'text-muted'}`}>
-                              <i className={`fas ${passwordStrength.requirements.lowercase ? 'fa-check-circle' : 'fa-circle'} me-2`}></i>
+                            <div
+                              className={`password-requirement ${
+                                passwordStrength.requirements.lowercase
+                                  ? "text-success"
+                                  : "text-muted"
+                              }`}
+                            >
+                              <i
+                                className={`fas ${
+                                  passwordStrength.requirements.lowercase
+                                    ? "fa-check-circle"
+                                    : "fa-circle"
+                                } me-2`}
+                              ></i>
                               <small>אות קטנה (a-z)</small>
                             </div>
                           </div>
                           <div className="col-6">
-                            <div className={`password-requirement ${passwordStrength.requirements.numbers ? 'text-success' : 'text-muted'}`}>
-                              <i className={`fas ${passwordStrength.requirements.numbers ? 'fa-check-circle' : 'fa-circle'} me-2`}></i>
+                            <div
+                              className={`password-requirement ${
+                                passwordStrength.requirements.numbers
+                                  ? "text-success"
+                                  : "text-muted"
+                              }`}
+                            >
+                              <i
+                                className={`fas ${
+                                  passwordStrength.requirements.numbers
+                                    ? "fa-check-circle"
+                                    : "fa-circle"
+                                } me-2`}
+                              ></i>
                               <small>4 מספרים לפחות</small>
                             </div>
-                            <div className={`password-requirement ${passwordStrength.requirements.special ? 'text-success' : 'text-muted'}`}>
-                              <i className={`fas ${passwordStrength.requirements.special ? 'fa-check-circle' : 'fa-circle'} me-2`}></i>
+                            <div
+                              className={`password-requirement ${
+                                passwordStrength.requirements.special
+                                  ? "text-success"
+                                  : "text-muted"
+                              }`}
+                            >
+                              <i
+                                className={`fas ${
+                                  passwordStrength.requirements.special
+                                    ? "fa-check-circle"
+                                    : "fa-circle"
+                                } me-2`}
+                              ></i>
                               <small>סימן מיוחד (!@#$...)</small>
                             </div>
-                            <div className={`password-requirement ${passwordStrength.requirements.noSpaces ? 'text-success' : 'text-muted'}`}>
-                              <i className={`fas ${passwordStrength.requirements.noSpaces ? 'fa-check-circle' : 'fa-circle'} me-2`}></i>
+                            <div
+                              className={`password-requirement ${
+                                passwordStrength.requirements.noSpaces
+                                  ? "text-success"
+                                  : "text-muted"
+                              }`}
+                            >
+                              <i
+                                className={`fas ${
+                                  passwordStrength.requirements.noSpaces
+                                    ? "fa-check-circle"
+                                    : "fa-circle"
+                                } me-2`}
+                              ></i>
                               <small>ללא רווחים</small>
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="d-flex justify-content-between mt-2">
                       <div>
                         {formik.touched.password && formik.errors.password && (
@@ -351,22 +457,28 @@ const Register: FunctionComponent<RegisterProps> = () => {
                           </div>
                         )}
                       </div>
-                      <small className="text-muted">{formik.values.password.length}/128</small>
+                      <small className="text-muted">
+                        {formik.values.password.length}/128
+                      </small>
                     </div>
                   </div>
 
-                  {/* הודעה על דרישת סיסמה חזקה */}
-                  {passwordStrength.score < 5 && formik.values.password && passwordStrength.score > 0 && (
-                    <div className="alert alert-warning-modern mb-4">
-                      <i className="fas fa-shield-alt alert-icon"></i>
-                      <div className="alert-content">
-                        <div className="alert-title">סיסמה חזקה יותר נדרשת</div>
-                        <div className="alert-message">אנא השלם את כל הדרישות לצורך הרשמה בטוחה</div>
+                  {passwordStrength.score < 5 &&
+                    formik.values.password &&
+                    passwordStrength.score > 0 && (
+                      <div className="alert alert-warning-modern mb-4">
+                        <i className="fas fa-shield-alt alert-icon"></i>
+                        <div className="alert-content">
+                          <div className="alert-title">
+                            סיסמה חזקה יותר נדרשת
+                          </div>
+                          <div className="alert-message">
+                            אנא השלם את כל הדרישות לצורך הרשמה בטוחה
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* כפתור הרשמה */}
                   <div className="d-grid gap-2 mb-4">
                     <button
                       className="btn btn-gradient-info py-2 fw-semibold"
@@ -387,26 +499,26 @@ const Register: FunctionComponent<RegisterProps> = () => {
                     </button>
                   </div>
 
-                  {/* הודעת מצב הטופס */}
                   {!isFormValid() && formik.dirty && (
                     <div className="alert alert-info-modern mb-4">
                       <i className="fas fa-info-circle alert-icon"></i>
                       <div className="alert-content">
                         <div className="alert-message">
-                          {!formik.isValid ? "אנא תקן את השגיאות בטופס" : 
-                           passwordStrength.score < 5 ? "אנא חזק את הסיסמה" : 
-                           "מלא את כל השדות"}
+                          {!formik.isValid
+                            ? "אנא תקן את השגיאות בטופס"
+                            : passwordStrength.score < 5
+                            ? "אנא חזק את הסיסמה"
+                            : "מלא את כל השדות"}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* קישור להתחברות */}
                   <div className="text-center border-top pt-4">
                     <p className="mb-0 text-muted">
                       כבר יש לך חשבון?{" "}
-                      <Link 
-                        to="/" 
+                      <Link
+                        to="/"
                         className="text-info text-decoration-none fw-semibold"
                       >
                         התחבר כאן
@@ -415,17 +527,22 @@ const Register: FunctionComponent<RegisterProps> = () => {
                   </div>
                 </form>
 
-                {/* הצגת מצב הטופס למטרות פיתוח */}
-                {process.env.NODE_ENV === 'development' && (
+                {process.env.NODE_ENV === "development" && (
                   <div className="mt-4 p-3 bg-light rounded border">
                     <small className="text-muted">
-                      <strong>🔧 מצב פיתוח:</strong><br/>
-                      ✅ Valid: {formik.isValid ? 'כן' : 'לא'}<br/>
-                      ✏️ Dirty: {formik.dirty ? 'כן' : 'לא'}<br/>
-                      🔒 Password Score: {passwordStrength.score}/6<br/>
-                      👆 Touched: {Object.keys(formik.touched).join(', ') || 'אף שדה'}<br/>
-                      ❌ Errors: {Object.keys(formik.errors).join(', ') || 'אין שגיאות'}<br/>
-                      🎯 Form Valid: {isFormValid() ? 'כן' : 'לא'}
+                      <strong>🔧 מצב פיתוח:</strong>
+                      <br />✅ Valid: {formik.isValid ? "כן" : "לא"}
+                      <br />
+                      ✏️ Dirty: {formik.dirty ? "כן" : "לא"}
+                      <br />
+                      🔒 Password Score: {passwordStrength.score}/6
+                      <br />
+                      👆 Touched:{" "}
+                      {Object.keys(formik.touched).join(", ") || "אף שדה"}
+                      <br />❌ Errors:{" "}
+                      {Object.keys(formik.errors).join(", ") || "אין שגיאות"}
+                      <br />
+                      🎯 Form Valid: {isFormValid() ? "כן" : "לא"}
                     </small>
                   </div>
                 )}

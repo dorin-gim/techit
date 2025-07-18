@@ -20,7 +20,7 @@ const UsersManagement: FunctionComponent<UsersManagementProps> = () => {
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
-    // בדיקה שהמשתמש הוא אדמין
+    // Check if user is admin
     try {
       const payload = getPayloadFromToken();
       if (!payload.isAdmin) {
