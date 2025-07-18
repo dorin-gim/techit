@@ -57,7 +57,7 @@ const Footer: FunctionComponent<FooterProps> = () => {
           </div>
           <div className="col-md-6 text-end">
             <p className="small mb-0">
-              נבנה ע"י <strong>דוד יכין</strong>
+              נבנה ע"י <strong>דורין גימפל גל</strong>
             </p>
           </div>
         </div>

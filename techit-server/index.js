@@ -34,7 +34,7 @@ const customLogger = (req, res, next) => {
 };
 
 mongoose
-  .connect(process.env.DB)
+  .connect(process.env.MONGO_URI_ATLAS)
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((error) => {
     console.error("❌ MongoDB connection failed:", error);
